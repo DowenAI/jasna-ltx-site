@@ -193,19 +193,16 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
       var vids = [], pics = [];
       (media || []).forEach(function(m){
         if (m.type === 'video' || m.type === 'gif'){
-          var variants = (m.variants || []).slice().sort(function(a,b){ return (b.bitrate||0)-(a.bitrate||0); });
-          var best = variants[0];
-          var mp4 = null;
-          for (var k = 0; k < variants.length; k++){
-            if ((variants[k].content_type||variants[k].type||'').indexOf('mp4') >= 0){ mp4 = variants[k]; break; }
-          }
-          best = mp4 || best;
-          if (best && best.url){
-            var h = (best.url.match(/\/(\d{3,4})x(\d{3,4})\//) || [])[1];
-            vids.push({ url: vidProxy(best.url), raw: best.url,
+          var fmts = (m.formats || []).filter(function(f){ return (f.container||'').indexOf('mp4') >= 0; });
+          if (!fmts.length && m.url && /mp4/.test(m.url)) fmts = [{ url: m.url, bitrate: 0 }];
+          fmts.sort(function(a,b){ return (b.bitrate||0)-(a.bitrate||0); });
+          fmts.forEach(function(f){
+            if (!f.url) return;
+            var h = (f.url.match(/\/(\d{3,4})x(\d{3,4})\//) || [])[1];
+            vids.push({ url: vidProxy(f.url), raw: f.url,
                         q: h ? (h + 'p') : '视频',
                         thumb: thumbUrl(m.thumbnail_url || '') });
-          }
+          });
         } else if (m.type === 'photo' && m.url){
           pics.push(m.url);
         }
