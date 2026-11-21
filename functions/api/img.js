@@ -3,6 +3,7 @@ const ALLOW = [
   'c0.jdbstatic.com', 'c1.jdbstatic.com', 'c2.jdbstatic.com',
   'c3.jdbstatic.com', 'c4.jdbstatic.com', 'c5.jdbstatic.com',
   'cf.javfree.me', 'javfree.me', 'pics.dmm.co.jp',
+  'pbs.twimg.com', 'video.twimg.com', 'abs.twimg.com',
 ];
 
 const UA =
