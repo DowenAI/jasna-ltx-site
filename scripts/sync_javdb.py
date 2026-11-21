@@ -252,6 +252,7 @@ def main():
         pool = [x for x in items
                 if not (x.get("subtitle") or "").strip()
                 and (x.get("code") or "").upper() not in checked]
+        pool.sort(key=lambda x: x.get("added_at") or 0)   # 旧的先查
         log("待查字幕的存量记录:", len(pool), " 已查过:", len(checked))
         for x in pool[:args.backfill]:
             code = (x.get("code") or "").upper()
