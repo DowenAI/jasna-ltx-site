@@ -7,29 +7,28 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>XDown 手机版</title>
+<title>XDown</title>
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-:root{--bg:#0b0f14;--card:#131a23;--line:#1e2836;--fg:#e6ebf2;--dim:#7f8b9c;--acc:#2563eb;--ok:#16a34a}
+:root{--bg:#0b0f14;--card:#131a23;--line:#1e2836;--fg:#e6ebf2;--dim:#7f8b9c;--acc:#2563eb}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
 body{padding-bottom:70px;overscroll-behavior-y:contain}
-header{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top,0)) 12px 10px}
+header{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top,0)) 12px 10px}
 .brand{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
 .brand h1{font-size:16px;margin:0;font-weight:700}
-.brand .st{margin-left:auto;font-size:11px;color:var(--dim)}
-.brand .st.on{color:#4ade80}
-.gear{border:1px solid var(--line);background:#161d27;color:#c3ccd9;border-radius:10px;width:32px;height:32px;font-size:15px;margin-left:8px}
-.search{display:flex;gap:8px}
-.search input{flex:1;min-width:0;background:#161d27;border:1px solid var(--line);border-radius:12px;color:var(--fg);padding:11px 13px;font-size:15px;outline:none}
-.search input:focus{border-color:#2f4a6d}
-.search button{border:0;border-radius:12px;background:var(--acc);color:#fff;padding:0 18px;font-size:15px;font-weight:600}
+.frow{display:flex;gap:8px}
+.frow input{flex:1;min-width:0;background:#161d27;border:1px solid var(--line);border-radius:12px;color:var(--fg);padding:11px 13px;font-size:15px;outline:none}
+.frow input:focus{border-color:#2f4a6d}
+.frow button{border:0;border-radius:12px;padding:0 15px;font-size:14px;font-weight:600}
+#paste{background:#1b2431;color:#cfd8e4;border:1px solid var(--line)}
+#go{background:var(--acc);color:#fff}
 .tabs{display:flex;gap:8px;margin-top:10px;overflow-x:auto}
 .tab{border:1px solid var(--line);background:#141b24;color:#c3ccd9;border-radius:999px;padding:7px 15px;font-size:13px;white-space:nowrap}
 .tab.on{background:var(--acc);border-color:var(--acc);color:#fff}
 main{padding:12px}
-.hint{color:var(--dim);font-size:13px;text-align:center;padding:26px 10px;line-height:1.8}
+.hint{color:var(--dim);font-size:13px;text-align:center;padding:30px 12px;line-height:1.9}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(min-width:620px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
@@ -60,37 +59,30 @@ nav a{flex:1;text-align:center;padding:9px 0 10px;color:#6f7c8d;font-size:11.5px
 nav a.on{color:#4da3ff}
 nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
 .toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:rgba(20,28,38,.97);border:1px solid #2b3a4d;color:#e6ebf2;font-size:13px;padding:9px 16px;border-radius:999px;z-index:200;display:none;max-width:86vw;text-align:center}
-#set{position:fixed;inset:0;z-index:150;background:rgba(6,8,12,.9);display:none;align-items:center;justify-content:center;padding:18px}
-#set.on{display:flex}
-.sheet{width:100%;max-width:460px;background:#121821;border:1px solid var(--line);border-radius:16px;padding:18px}
-.sheet h3{margin:0 0 6px;font-size:16px}
-.sheet p{margin:0 0 14px;color:var(--dim);font-size:12.5px;line-height:1.6}
-.sheet input{width:100%;background:#0e141c;border:1px solid var(--line);border-radius:11px;color:var(--fg);padding:11px 13px;font-size:14px}
-.sheet .row{display:flex;gap:8px;margin-top:12px}
-.sheet button{flex:1;border:1px solid var(--line);background:#182029;color:#cfd8e4;border-radius:11px;padding:11px 0;font-size:14px}
-.sheet .pri{background:var(--acc);border-color:var(--acc);color:#fff}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand">
-    <div class="logo">X</div><h1>XDown</h1>
-    <span class="st" id="hubst">未连接电脑</span>
-    <button class="gear" id="gear">⚙</button>
-  </div>
-  <div class="search">
-    <input id="q" type="search" placeholder="粘贴推文链接或输入关键词" enterkeyhint="search" autocomplete="off">
+  <div class="brand"><div class="logo">X</div><h1>XDown</h1></div>
+  <div class="frow">
+    <input id="q" type="text" placeholder="粘贴推文链接，或输入 @用户名" enterkeyhint="go" autocomplete="off" autocapitalize="off" spellcheck="false">
     <button id="paste">粘贴</button>
-    <button id="go">搜索</button>
+    <button id="go">解析</button>
   </div>
   <div class="tabs">
-    <button class="tab on" data-v="result">搜索结果</button>
+    <button class="tab on" data-v="parse">解析结果</button>
     <button class="tab" data-v="author">作者作品</button>
     <button class="tab" data-v="saved">我的</button>
   </div>
 </header>
 
-<main id="main"><div class="hint">先在 ⚙ 里填电脑地址<br>再输入关键词搜索</div></main>
+<main id="main">
+  <div class="hint">
+    把 X 的推文链接粘贴进来 → 点「解析」<br>
+    然后在结果里选清晰度播放或下载<br><br>
+    也可以输入 <b>@用户名</b> 看 TA 的全部作品
+  </div>
+</main>
 
 <div id="player">
   <div id="pbar"><b id="ptitle">播放</b><button class="x" id="pclose">✕</button></div>
@@ -98,21 +90,8 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
   <div class="pinfo" id="pinfo"></div>
 </div>
 
-<div id="set">
-  <div class="sheet">
-    <h3>连接电脑</h3>
-    <p>在电脑上双击 <b>启动Hub.bat</b>，窗口里会显示一个地址（形如 http://192.168.1.14:8899），填到下面。<br>电脑和手机要连同一个 WiFi。</p>
-    <input id="huburl" placeholder="http://192.168.1.14:8899" inputmode="url" autocomplete="off">
-    <div class="row">
-      <button id="hubsave" class="pri">保存</button>
-      <button id="hubtest">测试连接</button>
-      <button id="hubclose">关闭</button>
-    </div>
-  </div>
-</div>
-
 <nav>
-  <a class="on" data-tab="result"><i>🔍</i>搜索</a>
+  <a class="on" data-tab="parse"><i>🔗</i>解析</a>
   <a data-tab="author"><i>👤</i>作者</a>
   <a data-tab="saved"><i>⬇</i>我的</a>
 </nav>
@@ -122,154 +101,143 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
 <script>
 (function(){
   var $ = function(s){ return document.querySelector(s); };
-  var state = { view:'result', results:[], author:[], saved:[], hub:'', parsed:null };
+  var state = { view:'parse', parsed:null, author:[], saved:[] };
   try { state.saved = JSON.parse(localStorage.getItem('xd_saved')||'[]'); } catch(e){ state.saved=[]; }
-  state.hub = (localStorage.getItem('xd_hub')||'').replace(/\/+$/,'');
 
   function toast(m){ var t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(function(){t.style.display='none';},2400); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function saveList(){ try{ localStorage.setItem('xd_saved', JSON.stringify(state.saved.slice(0,200))); }catch(e){} }
-  function getJSON(url){
-    return fetch(url, {cache:'no-store'}).then(function(r){ return r.json(); });
-  }
-  function setHubStatus(ok, txt){
-    var s=$('#hubst');
-    s.textContent = txt || (ok ? '电脑已连接' : (state.hub ? '连接失败' : '未连接电脑'));
-    s.classList.toggle('on', !!ok);
+  function getJSON(url){ return fetch(url,{cache:'no-store'}).then(function(r){ return r.json(); }); }
+
+  function thumbUrl(u){ return u ? ('/api/img?u=' + encodeURIComponent(u)) : ''; }
+
+  function current(){
+    if (state.view==='parse') return state.parsed ? [state.parsed] : [];
+    return state.view==='author' ? state.author : state.saved;
   }
 
   function render(){
-    var list = current();
-    var main = $('#main');
-    if (!list.length) {
+    var list = current(), main = $('#main');
+    if (!list.length){
       main.innerHTML = '<div class="hint">' +
-        (state.view==='saved' ? '还没有内容<br>播放或下载后会自动记录'
-         : state.view==='author' ? '先搜到结果，点卡片上的「@作者」<br>即可加载 TA 的全部作品'
-         : (state.hub ? '输入关键词后点「搜索」<br>搜到结果可直接点封面播放'
-                      : '先点右上角 ⚙ 填写电脑地址<br>（电脑上运行 启动Hub.bat）')) + '</div>';
+        (state.view==='saved' ? '还没有内容<br>播放或下载后会自动记录在这里'
+         : state.view==='author' ? '先解析一条推文<br>再点结果里的「@作者 · 全部作品」'
+         : '把推文链接粘贴到上面 → 点「解析」<br><br>支持 x.com / twitter.com 的 status 链接<br>也支持直接输入 @用户名') + '</div>';
       return;
     }
     var h = '<div class="grid">';
     list.forEach(function(it,i){
-      var th = (it.videos[0] && it.videos[0].thumb) || it.photos[0] || '';
-      if (th && state.hub) th = state.hub + '/stream?u=' + encodeURIComponent(th);
+      var th = (it.videos[0] && it.videos[0].thumb) || it.thumb || it.photos[0] || '';
       h += '<div class="card">' +
         '<div class="thumb" data-play="'+i+'">' +
           (th ? '<img loading="lazy" src="'+esc(th)+'" alt="" onerror="this.style.opacity=.12">' : '<div style="height:100%"></div>') +
-          (it.videos.length ? '<div class="play"><i></i></div><div class="badge">视频</div>'
-                            : '<div class="badge">图片 '+it.photos.length+'</div>') +
+          (it.videos && it.videos.length ? '<div class="play"><i></i></div><div class="badge">视频</div>'
+                            : '<div class="badge">图片 '+((it.photos||[]).length)+'</div>') +
         '</div>' +
         '<div class="meta">' +
           '<div class="t">'+esc(it.text||'')+'</div>' +
-          '<div class="a" data-author="'+esc(it.author)+'">@'+esc(it.author)+' <span>· 全部作品</span></div>' +
+          (it.author ? '<div class="a" data-author="'+esc(it.author)+'">@'+esc(it.author)+' <span>· 全部作品</span></div>' : '') +
           '<div class="acts">' +
-            (it.videos.length
+            ((it.videos && it.videos.length)
               ? ((it.videos.length>1 && it.videos[0].q)
                   ? it.videos.map(function(v,k){ return '<button class="'+(k===0?'pri':'')+'" data-play="'+i+'" data-q="'+k+'">▶ '+esc(v.q)+'</button>'; }).join('')
                   : '<button class="pri" data-play="'+i+'">▶ 播放</button><button class="dl" data-dl="'+i+'">⬇ 下载</button>')
-              : '<a class="pri" href="'+esc(it.photos[0]||'')+'" target="_blank" rel="noopener">查看图片</a>') +
+              : '<a class="pri" href="'+esc((it.photos||[])[0]||'')+'" target="_blank" rel="noopener">查看图片</a>') +
           '</div>' +
-          (it.videos.length>1 && it.videos[0].q ? '<div class="acts"><button data-dl="'+i+'">⬇ 下载首个清晰度</button></div>' : '') +
-          '</div></div>';
+          ((it.videos && it.videos.length>1 && it.videos[0].q) ? '<div class="acts"><button class="dl" data-dl="'+i+'">⬇ 下载首个清晰度</button></div>' : '') +
+        '</div></div>';
     });
     h += '</div>';
     main.innerHTML = h;
   }
 
-  function current(){ if (state.view==='parse') return state.parsed ? [state.parsed] : []; return state.view==='author' ? state.author : (state.view==='saved' ? state.saved : state.results); }
-
   function play(it, qi){
-    if (!it.videos.length){ if (it.photos[0]) window.open(it.photos[0],'_blank'); return; }
+    if (!it.videos || !it.videos.length){ if (it.photos && it.photos[0]) window.open(it.photos[0],'_blank'); return; }
     var v = it.videos[qi||0] || it.videos[0];
-    $('#ptitle').textContent = '@' + (it.author||'') + ' · ' + (it.text||'').slice(0,16);
+    $('#ptitle').textContent = (it.author?('@'+it.author+' · '):'') + (it.text||'').slice(0,16);
     var vid = $('#pvid');
-    vid.onerror = function(){
-      if (state.hub && v.url.indexOf(state.hub) !== 0) {
-        vid.onerror = null;
-        vid.src = state.hub + '/stream?u=' + encodeURIComponent(v.url);
-        vid.play().catch(function(){});
-      } else { toast('这个视频播放失败，试试下载'); }
-    };
+    vid.onerror = function(){ toast('这个清晰度播放失败，换一个试试'); };
     vid.src = v.url; vid.load();
     $('#pinfo').textContent = it.text || '';
     $('#player').classList.add('on');
     vid.play().catch(function(){});
-    if (!state.saved.some(function(x){return x.id===it.id;})) { state.saved.unshift(it); saveList(); }
+    if (!state.saved.some(function(x){return x.id===it.id;})) [state.saved.unshift(it), saveList()];
   }
 
   function download(it){
-    if (!it.videos.length){ toast('这条没有视频'); return; }
-    var url = (it.videos[0] && it.videos[0].url) || '';
+    if (!it.videos || !it.videos.length){ toast('这条没有视频'); return; }
     var a = document.createElement('a');
-    a.href = state.hub ? (state.hub + '/stream?u=' + encodeURIComponent(url)) : url;
+    a.href = it.videos[0].url;
     a.download = (it.author||'x') + '_' + it.id + '.mp4';
     a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click(); a.remove();
-    toast('开始下载（如无反应请在浏览器里允许下载）');
-    if (!state.saved.some(function(x){return x.id===it.id;})) { state.saved.unshift(it); saveList(); }
+    toast('开始下载（如无反应请在浏览器允许下载）');
+    if (!state.saved.some(function(x){return x.id===it.id;})) [state.saved.unshift(it), saveList()];
   }
 
   function isTweetUrl(s){ return /(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d{8,25}/.test(s); }
-  function isAuthorUrl(s){ return /^(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]{1,20}\/?$/.test(s); }
 
-  function resolveUrl(link){
-    state.view = 'parse';
-    setTab('result');
+  function resolve(link){
+    state.view='parse'; setTab('parse');
     $('#main').innerHTML = '<div class="hint">解析中…</div>';
     getJSON('/api/ts?u=' + encodeURIComponent(link)).then(function(j){
-      if (!j.ok){ $('#main').innerHTML = '<div class="hint">解析失败：' + esc(j.error||'') + '<br>可以试试先用电脑 Hub</div>'; return; }
-      var thumbP = j.thumb ? ('/api/img?u=' + encodeURIComponent(j.thumb)) : '';
+      if (!j.ok){ $('#main').innerHTML = '<div class="hint">解析失败：' + esc(j.error||'') + '</div>'; return; }
+      var tp = thumbUrl(j.thumb);
       var qs = (j.videos||[]).map(function(v){
         var m = (v.src||'').match(/\/(\d{3,4})x(\d{3,4})\//);
-        return { url: v.url, q: m ? (m[1]+'p') : '视频', thumb: thumbP };
+        return { url: v.url, q: m ? (m[1]+'p') : '视频', thumb: tp };
       });
-      state.parsed = { id: (link.match(/status\/(\d+)/)||[])[1]||'', text: '已解析', author: (link.match(/com\/([^/]+)\//)||[])[1]||'',
-                       thumb: thumbP, videos: qs, photos: (j.images||[]).map(function(x){return x.url;}) };
+      state.parsed = {
+        id: (link.match(/status\/(\d+)/)||[])[1]||'',
+        text: '已解析 · ' + qs.length + ' 个清晰度',
+        author: (link.match(/com\/([^/]+)\//)||[])[1]||'',
+        thumb: tp, videos: qs, photos: (j.images||[]).map(function(x){return x.url;})
+      };
       render();
-    }).catch(function(){ $('#main').innerHTML='<div class="hint">网络错误</div>'; });
-  }
-
-  function search(){
-    var q = ($('#q').value||'').trim();
-    if (!q){ toast('请输入关键词'); return; }
-    if (isTweetUrl(q)) { resolveUrl(q); return; }
-    if (isAuthorUrl(q)) { loadAuthor((q.replace(/\/$/,'').split('/').pop())); return; }
-    if (!state.hub){ $('#main').innerHTML='<div class="hint">关键词搜索需要电脑 Hub<br>或者直接粘贴推文链接（x.com/xxx/status/...）<br><br>点右上角 ⚙ 可设置电脑地址</div>'; openSet(); return; }
-    $('#main').innerHTML = '<div class="hint">搜索中…<br>约 10~40 秒</div>';
-    getJSON(state.hub + '/search?q=' + encodeURIComponent(q) + '&n=12').then(function(j){
-      if (!j.ok || !j.ids || !j.ids.length){ $('#main').innerHTML='<div class="hint">没搜到结果，换个关键词</div>'; return; }
-      $('#main').innerHTML = '<div class="hint">解析媒体中…（'+j.ids.length+' 条）</div>';
-      return getJSON(state.hub + '/views?ids=' + encodeURIComponent(j.ids.join(','))).then(function(v){
-        state.results = (v.items||[]);
-        state.view='result'; render();
-        if (!state.results.length) $('#main').innerHTML='<div class="hint">搜到了推文但没有媒体</div>';
-      });
-    }).catch(function(){
-      setHubStatus(false, '连接失败');
-      $('#main').innerHTML='<div class="hint">连不上电脑<br>确认电脑开着 Hub、手机同一 WiFi</div>';
-    });
+    }).catch(function(){ $('#main').innerHTML='<div class="hint">网络错误，重试一下</div>'; });
   }
 
   function loadAuthor(name){
+    name = String(name||'').replace(/^@/,'').trim();
     if (!name) return;
-    if (!state.hub){ openSet(); return; }
     state.view='author'; setTab('author');
     $('#main').innerHTML = '<div class="hint">正在加载 @'+esc(name)+' 的作品…</div>';
-    getJSON(state.hub + '/author?name=' + encodeURIComponent(name)).then(function(j){
-      state.author = (j.items||[]);
+    getJSON('/api/fx?p=' + encodeURIComponent('/2/profile/'+name+'/media?count=40')).then(function(j){
+      var arr = (j && (j.results || (j.media && j.media.results))) || [];
+      state.author = arr.map(function(t){
+        var out = { id:(t&&t.id)||'', text:(t&&t.text)||'', author:(t&&t.author&&t.author.screen_name)||name,
+                    videos:[], photos:[], thumb:'' };
+        var m = (t && t.media && t.media.all) || [];
+        m.forEach(function(x){
+          if (x.type === 'video' || x.type === 'gif'){
+            var u = x.url || (x.variants && x.variants[0] && x.variants[0].url);
+            if (u) out.videos.push({ url:u, thumb: thumbUrl(x.thumbnail_url||'') });
+          } else if (x.type === 'photo' && x.url) out.photos.push(x.url);
+        });
+        return out;
+      }).filter(function(x){ return x.videos.length || x.photos.length; });
       render();
       if (!state.author.length) $('#main').innerHTML='<div class="hint">TA 没有可下载的媒体</div>';
-    }).catch(function(){ $('#main').innerHTML='<div class="hint">加载失败</div>'; });
+    }).catch(function(){ $('#main').innerHTML='<div class="hint">加载失败，检查网络</div>'; });
   }
 
   function setTab(v){
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-v')===v); });
     document.querySelectorAll('nav a').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-tab')===v); });
   }
-  function show(v){ state.view = v; setTab(v); render(); }
+  function show(v){ state.view=v; setTab(v); render(); }
 
-  function openSet(){ $('#huburl').value = state.hub || ''; $('#set').classList.add('on'); }
-  function closeSet(){ $('#set').classList.remove('on'); }
+  function submit(){
+    var s = ($('#q').value||'').trim();
+    if (!s){ toast('先粘贴链接或输入 @用户名'); return; }
+    if (isTweetUrl(s)) { resolve(s); return; }
+    if (/^@?[A-Za-z0-9_]{2,20}$/.test(s.replace(/^https?:\/\/(www\.)?(x|twitter)\.com\//,''))) {
+      loadAuthor(s.split('/').pop()); return;
+    }
+    var m = s.match(/(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+/);
+    if (m) { resolve(m[0]); return; }
+    toast('没识别出链接，请粘贴推文地址或 @用户名');
+  }
 
   document.addEventListener('click', function(e){
     var t = e.target;
@@ -279,7 +247,8 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
     var tb = t.closest('.tab,nav a'); if (tb){ show(tb.getAttribute('data-v')||tb.getAttribute('data-tab')); return; }
   });
 
-  $('#go').addEventListener('click', search);
+  $('#go').addEventListener('click', submit);
+  $('#q').addEventListener('keydown', function(e){ if(e.key==='Enter'){ this.blur(); submit(); } });
   $('#paste').addEventListener('click', function(){
     if (navigator.clipboard && navigator.clipboard.readText){
       navigator.clipboard.readText().then(function(t){
@@ -287,55 +256,25 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
         if (!t){ toast('剪贴板是空的'); return; }
         $('#q').value = t;
         toast('已粘贴，正在解析…');
-        setTimeout(search, 200);
+        setTimeout(submit, 150);
       }).catch(function(){ toast('请长按输入框手动粘贴'); });
     } else { toast('请长按输入框手动粘贴'); }
   });
-
-  // 从系统分享面板进来的链接
-  (function(){
-    var sp = new URLSearchParams(location.search);
-    var shared = sp.get('url') || sp.get('text') || sp.get('title') || '';
-    var m = shared.match(/https?:\/\/(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d+/);
-    if (m){
-      $('#q').value = m[0];
-      setTimeout(search, 300);
-    }
-  })();
-  $('#q').addEventListener('keydown', function(e){ if(e.key==='Enter'){ this.blur(); search(); } });
   $('#pclose').addEventListener('click', function(){
     var v=$('#pvid'); v.pause(); v.removeAttribute('src'); v.load();
     $('#player').classList.remove('on');
   });
-  $('#gear').addEventListener('click', openSet);
-  $('#hubclose').addEventListener('click', closeSet);
-  $('#hubsave').addEventListener('click', function(){
-    var u = ($('#huburl').value||'').trim().replace(/\/+$/,'');
-    state.hub = u;
-    try { localStorage.setItem('xd_hub', u); } catch(e){}
-    closeSet();
-    if (u) testHub(true); else setHubStatus(false);
-  });
-  $('#hubtest').addEventListener('click', function(){
-    var u = ($('#huburl').value||'').trim().replace(/\/+$/,'');
-    if (!u){ toast('先填地址'); return; }
-    getJSON(u + '/ping').then(function(j){
-      toast(j && j.ok ? ('连接成功 · ' + (j.ip||'')) : '连接失败');
-      if (j && j.ok) setHubStatus(true);
-    }).catch(function(){ toast('连接失败，检查地址和 WiFi'); });
-  });
 
-  function testHub(silent){
-    if (!state.hub) return;
-    getJSON(state.hub + '/ping').then(function(j){
-      setHubStatus(!!(j&&j.ok));
-      if (!silent && j && j.ok) toast('已连接电脑');
-    }).catch(function(){ setHubStatus(false); });
-  }
+  // 系统分享 / 链接直接打开
+  (function(){
+    var sp = new URLSearchParams(location.search);
+    var shared = sp.get('url') || sp.get('text') || sp.get('title') || '';
+    var m = shared.match(/(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d{8,25}/);
+    if (m){ $('#q').value = m[0]; setTimeout(submit, 250); }
+  })();
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
-  testHub(true);
-  show('result');
+  show('parse');
 })();
 </script>
 </body>
