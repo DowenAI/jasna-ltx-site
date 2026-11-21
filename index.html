@@ -444,10 +444,15 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
 
 
   // ---- 封面加速：covers 走图片代理 + 懒加载 ----
-  var COVER_HOST = /jdbstatic\.com\/covers\//;
+  var COVER_HOST = /(jdbstatic\.com\/covers\/)|(javfree\.me\/)/;
   var PROXY = 'https://wsrv.nl/?w=360&h=500&fit=cover&output=webp&q=80&url=';
   var rafPending = false;
-  function proxyUrl(u){ return PROXY + encodeURIComponent(u); }
+  function proxyUrl(u){
+    if (/javfree\.me/.test(u)) {
+      return 'https://wsrv.nl/?w=900&output=webp&q=80&url=' + encodeURIComponent(u);
+    }
+    return PROXY + encodeURIComponent(u);
+  }
   function fixImgs(){
     if (rafPending) return;
     rafPending = true;
