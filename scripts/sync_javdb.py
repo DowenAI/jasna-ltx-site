@@ -17,6 +17,7 @@ import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA = os.path.join(ROOT, "data", "movies.json")
+SUBCHK = os.path.join(ROOT, "data", "subtitle-checked.json")
 
 UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36")
@@ -239,20 +240,36 @@ def main():
         log("  + %-12s %s  %s" % (it["code"], it["date"], it["title"][:34]))
         time.sleep(0.3)
 
-    # 补录：给缺少字幕信息的老记录查一次
+    # 补录：给缺少字幕信息的记录查一次（记录已查过的，逐批覆盖）
     filled = 0
+    checked = set()
+    try:
+        checked = set(json.load(open(SUBCHK, encoding="utf-8")).get("checked") or [])
+    except Exception:
+        checked = set()
+
     if args.backfill > 0:
-        pool = [x for x in (added + items) if not (x.get("subtitle") or "").strip()]
+        pool = [x for x in items
+                if not (x.get("subtitle") or "").strip()
+                and (x.get("code") or "").upper() not in checked]
+        log("待查字幕的存量记录:", len(pool), " 已查过:", len(checked))
         for x in pool[:args.backfill]:
-            if not x.get("code"):
+            code = (x.get("code") or "").upper()
+            if not code:
                 continue
-            u = find_zh_subtitle(x["code"])
+            u = find_zh_subtitle(code)
+            checked.add(code)
             if u:
                 x["subtitle"] = u
                 filled += 1
-                log("   补字幕 %-12s %s" % (x["code"], u.split("/")[-1]))
+                log("   补字幕 %-12s %s" % (code, u.split("/")[-1]))
             time.sleep(0.2)
-        log("补录字幕:", filled)
+        try:
+            json.dump({"checked": sorted(checked)}, open(SUBCHK, "w", encoding="utf-8"),
+                      ensure_ascii=False)
+        except Exception as e:
+            log("   写已查记录失败:", str(e)[:50])
+        log("补录字幕:", filled, " 累计已查:", len(checked))
 
     log("本次新增:", len(added))
     if args.dry_run:
