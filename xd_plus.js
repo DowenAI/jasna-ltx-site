@@ -163,7 +163,7 @@
       '<div class="xdp-tabs">' +
       '<button class="xdp-tab on" data-tab="daily">每日推荐</button>' +
       '<button class="xdp-tab" data-tab="rank">热门榜</button>' +
-      '<button class="xdp-tab" data-tab="actor">女优墙</button>' +
+      
       '</div><button class="xdp-close" title="关闭">✕</button></div>' +
       '<div id="xdp-body"></div></div>';
     document.body.appendChild(mask);
@@ -231,6 +231,62 @@
     });
   }
 
+
+  /* ---------- 大图缩放 ---------- */
+  var ZOOM = { scale: 1, x: 0, y: 0, src: '' };
+  function ensureZoom() {
+    if (document.getElementById('xdp-zoom')) return;
+    var z = el('div', '');
+    z.id = 'xdp-zoom';
+    z.innerHTML = '<img id="xdp-zoom-img" alt="">' +
+      '<div id="xdp-zoom-tip">滚轮缩放 · 拖动移动 · 双击复位 · Esc 关闭</div>';
+    document.body.appendChild(z);
+    var img = document.getElementById('xdp-zoom-img');
+
+    function apply() {
+      img.style.transform = 'translate(' + ZOOM.x + 'px,' + ZOOM.y + 'px) scale(' + ZOOM.scale + ')';
+    }
+    z.addEventListener('click', function (e) {
+      if (e.target === img) return;
+      z.classList.remove('on');
+    });
+    z.addEventListener('wheel', function (e) {
+      e.preventDefault();
+      ZOOM.scale = Math.min(6, Math.max(1, ZOOM.scale * (e.deltaY < 0 ? 1.15 : 0.87)));
+      if (ZOOM.scale === 1) { ZOOM.x = 0; ZOOM.y = 0; }
+      apply();
+    }, { passive: false });
+
+    var dragging = false, sx = 0, sy = 0;
+    img.addEventListener('mousedown', function (e) {
+      dragging = true; sx = e.clientX - ZOOM.x; sy = e.clientY - ZOOM.y;
+      img.style.cursor = 'grabbing'; e.preventDefault();
+    });
+    window.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      ZOOM.x = e.clientX - sx; ZOOM.y = e.clientY - sy; apply();
+    });
+    window.addEventListener('mouseup', function () {
+      dragging = false; img.style.cursor = 'zoom-out';
+    });
+    img.addEventListener('dblclick', function () {
+      ZOOM.scale = 1; ZOOM.x = 0; ZOOM.y = 0; apply();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') z.classList.remove('on');
+    });
+  }
+
+  function openZoom(src) {
+    ensureZoom();
+    var z = document.getElementById('xdp-zoom');
+    var img = document.getElementById('xdp-zoom-img');
+    ZOOM = { scale: 1, x: 0, y: 0, src: src };
+    img.src = src;
+    img.style.transform = 'none';
+    z.classList.add('on');
+  }
+
   /* ---------- 详情弹窗 ---------- */
   function ensureDetail() {
     if ($('#xdp-detail')) return;
@@ -249,15 +305,15 @@
     loadData(function () {
       // 帧列表：cover + 长截图切块 + samples
       var frames = [];
-      if (it.cover) frames.push({ src: it.cover.replace(/w=\d+/, 'w=900'), pos: '50% 20%' });
+      if (it.cover) frames.push({ src: it.cover.replace(/w=\d+/, 'w=900'), pos: '50% 20%', fit: 'contain' });
       if (it.shot) {
         var SHOT_STEPS = 6;
         for (var si = 0; si < SHOT_STEPS; si++) {
-          frames.push({ src: it.shot, pos: '50% ' + Math.round(si * 100 / (SHOT_STEPS - 1)) + '%', tag: '剧照' });
+          frames.push({ src: it.shot, pos: '50% ' + Math.round(si * 100 / (SHOT_STEPS - 1)) + '%', tag: '剧照', fit: 'cover' });
         }
       }
-      (it.samples || []).forEach(function (u) { frames.push({ src: u, pos: '50% 50%' }); });
-      if (!frames.length) frames.push({ src: '', pos: '50% 50%' });
+      (it.samples || []).forEach(function (u) { frames.push({ src: u, pos: '50% 50%', fit: 'contain' }); });
+      if (!frames.length) frames.push({ src: '', pos: '50% 50%', fit: 'contain' });
       var idx = 0;
 
       var body = $('#xdp-dbody');
@@ -292,6 +348,7 @@
         var t = el('img');
         t.src = f.src; t.loading = 'lazy';
         t.style.objectPosition = f.pos || '50% 20%';
+        t.style.objectFit = f.fit || 'cover';
         if (i === 0) t.className = 'on';
         t.addEventListener('click', function () { setIdx(i); });
         thumbs.appendChild(t);
@@ -300,12 +357,14 @@
         idx = (i + frames.length) % frames.length;
         var st = $('#xdp-stage');
         st.src = frames[idx].src;
-        st.style.objectFit = 'contain';
+        st.style.objectFit = frames[idx].fit || 'contain';
         st.style.objectPosition = frames[idx].pos || '50% 20%';
         Array.prototype.forEach.call(thumbs.children, function (c, k) {
           c.className = (k === idx) ? 'on' : '';
         });
       }
+      $('#xdp-stage').style.cursor = 'zoom-in';
+      $('#xdp-stage').onclick = function () { openZoom(frames[idx].src); };
       $('#xdp-prev').onclick = function () { setIdx(idx - 1); };
       $('#xdp-next').onclick = function () { setIdx(idx + 1); };
       document.addEventListener('keydown', function (e) {
@@ -368,8 +427,32 @@
     anchor.parentElement.insertBefore(b, anchor);
   }
 
+
+  /* ---------- 主页面卡片接管：点封面打开详情弹窗 ---------- */
+  function hookMainCards() {
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var card = t.closest('.card.clickable');
+      if (!card) return;
+      // 面板内部不接管
+      if (card.closest('#xdp-mask') || card.closest('#xdp-detail')) return;
+      // 按钮/链接/操作区不接管
+      if (t.closest('button, a, input, select, textarea, .actions')) return;
+      var code = card.getAttribute('data-code');
+      if (!code) return;
+      e.preventDefault();
+      e.stopPropagation();
+      loadData(function () {
+        var it = DATA.__byCode[code];
+        if (it) openDetail(it);
+      });
+    }, true);
+  }
+
   function boot() {
     addButton();
+    hookMainCards();
     new MutationObserver(function () { addButton(); })
       .observe(document.body, { childList: true, subtree: true });
   }
