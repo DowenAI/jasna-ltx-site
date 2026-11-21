@@ -439,6 +439,36 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
     };
   }
 
+
+  // ---- 封面加速：covers 走图片代理 + 懒加载 ----
+  var COVER_HOST = /jdbstatic\.com\/covers\//;
+  var PROXY = 'https://wsrv.nl/?w=360&output=webp&q=78&url=';
+  var rafPending = false;
+  function proxyUrl(u){ return PROXY + encodeURIComponent(u); }
+  function fixImgs(){
+    if (rafPending) return;
+    rafPending = true;
+    requestAnimationFrame(function(){
+      rafPending = false;
+      var imgs = document.querySelectorAll('img');
+      for (var i = 0; i < imgs.length; i++) {
+        var img = imgs[i];
+        if (!img.getAttribute('loading')) {
+          img.setAttribute('loading', 'lazy');
+          img.setAttribute('decoding', 'async');
+        }
+        var src = img.getAttribute('src') || '';
+        if (src && COVER_HOST.test(src)) {
+          img.setAttribute('data-xd-origin', src);
+          img.onerror = function(){
+            var o = this.getAttribute('data-xd-origin');
+            if (o && this.src !== o) this.src = o;
+          };
+          img.src = proxyUrl(src);
+        }
+      }
+    });
+  }
   function boot(){
     buildBar();
     fetch('data/subtitles.json').then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
@@ -446,7 +476,9 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
       SUBS = {}; (j.codes || []).forEach(function(c){ SUBS[c] = 1; });
       READY = true;
       paint();
-      new MutationObserver(function(){ paint(); }).observe(document.body, {childList:true, subtree:true});
+      var mo = new MutationObserver(function(){ paint(); fixImgs(); });
+      mo.observe(document.body, {childList:true, subtree:true});
+      fixImgs();
     }).catch(function(){});
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
