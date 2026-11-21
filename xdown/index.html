@@ -42,10 +42,10 @@ main{padding:12px}
 .thumb .badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.62);border-radius:6px;font-size:11px;padding:2px 7px;color:#dbe4f0}
 .meta{padding:8px 9px 10px}
 .meta .t{font-size:12.5px;color:#cdd6e2;height:34px;overflow:hidden;line-height:17px}
-.meta .a{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:12px;color:#7dc4ff}
+.meta .a{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:12px;color:#7dc4ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta .a span{color:var(--dim)}
-.acts{display:flex;gap:6px;margin-top:8px}
-.acts button,.acts a{flex:1;text-align:center;border:1px solid var(--line);background:#182029;color:#cfd8e4;border-radius:9px;padding:7px 0;font-size:12.5px;text-decoration:none}
+.acts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.acts button,.acts a{flex:1 1 calc(50% - 3px);min-width:0;text-align:center;border:1px solid var(--line);background:#182029;color:#cfd8e4;border-radius:9px;padding:8px 0;font-size:12.5px;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .acts .pri{background:var(--acc);border-color:var(--acc);color:#fff}
 .acts .dl{background:#14532d;border-color:#14532d;color:#d7f5e3}
 #player{position:fixed;inset:0;background:#000;z-index:100;display:none;flex-direction:column}
