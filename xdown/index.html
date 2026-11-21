@@ -177,24 +177,67 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
 
   function isTweetUrl(s){ return /(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d{8,25}/.test(s); }
 
+  function vidProxy(u){ return '/api/v?u=' + encodeURIComponent(u); }
+
   function resolve(link){
     state.view='parse'; setTab('parse');
     $('#main').innerHTML = '<div class="hint">解析中…</div>';
-    getJSON('/api/ts?u=' + encodeURIComponent(link)).then(function(j){
-      if (!j.ok){ $('#main').innerHTML = '<div class="hint">解析失败：' + esc(j.error||'') + '</div>'; return; }
-      var tp = thumbUrl(j.thumb);
-      var qs = (j.videos||[]).map(function(v){
-        var m = (v.src||'').match(/\/(\d{3,4})x(\d{3,4})\//);
-        return { url: v.url, q: m ? (m[1]+'p') : '视频', thumb: tp };
+    var id = (link.match(/status\/(\d{8,25})/)||[])[1] || '';
+    if (!id){ $('#main').innerHTML='<div class="hint">链接里没有推文编号</div>'; return; }
+
+    getJSON('/api/fx?p=' + encodeURIComponent('/2/status/' + id)).then(function(j){
+      var st = j && (j.status || j.tweet);
+      if (!st){ return null; }
+      var media = (st.media && (st.media.all || st.media.videos || [])) || [];
+      if (!media.length && st.media && st.media.photos) media = st.media.photos;
+      var vids = [], pics = [];
+      (media || []).forEach(function(m){
+        if (m.type === 'video' || m.type === 'gif'){
+          var variants = (m.variants || []).slice().sort(function(a,b){ return (b.bitrate||0)-(a.bitrate||0); });
+          var best = variants[0];
+          var mp4 = null;
+          for (var k = 0; k < variants.length; k++){
+            if ((variants[k].content_type||variants[k].type||'').indexOf('mp4') >= 0){ mp4 = variants[k]; break; }
+          }
+          best = mp4 || best;
+          if (best && best.url){
+            var h = (best.url.match(/\/(\d{3,4})x(\d{3,4})\//) || [])[1];
+            vids.push({ url: vidProxy(best.url), raw: best.url,
+                        q: h ? (h + 'p') : '视频',
+                        thumb: thumbUrl(m.thumbnail_url || '') });
+          }
+        } else if (m.type === 'photo' && m.url){
+          pics.push(m.url);
+        }
       });
+      // 多个清晰度统一从 variants 里取
+      if (!vids.length) return null;
+      var seen = {}, uniq = [];
+      vids.forEach(function(v){ if(!seen[v.raw]){ seen[v.raw]=1; uniq.push(v); } });
       state.parsed = {
-        id: (link.match(/status\/(\d+)/)||[])[1]||'',
-        text: '已解析 · ' + qs.length + ' 个清晰度',
-        author: (link.match(/com\/([^/]+)\//)||[])[1]||'',
-        thumb: tp, videos: qs, photos: (j.images||[]).map(function(x){return x.url;})
+        id: id,
+        text: (st.text || '').slice(0, 80) || ('已解析 · ' + uniq.length + ' 个清晰度'),
+        author: (st.author && st.author.screen_name) || '',
+        thumb: thumbUrl(st.media && st.media.all && st.media.all[0] && st.media.all[0].thumbnail_url || ''),
+        videos: uniq, photos: pics
       };
       render();
-    }).catch(function(){ $('#main').innerHTML='<div class="hint">网络错误，重试一下</div>'; });
+      return true;
+    }).catch(function(){}).then(function(ok){
+      if (ok) return;
+      // 兜底：twittersaver
+      getJSON('/api/ts?u=' + encodeURIComponent(link)).then(function(j){
+        if (!j || !j.ok){ $('#main').innerHTML='<div class="hint">解析失败<br>' + esc((j&&j.error)||'这条可能不是视频') + '</div>'; return; }
+        var tp = thumbUrl(j.thumb);
+        var qs = (j.videos||[]).map(function(v){
+          var m = (v.src||'').match(/\/(\d{3,4})x(\d{3,4})\//);
+          return { url: vidProxy(v.src || v.url), raw: v.url, q: m ? (m[1]+'p') : '视频', thumb: tp };
+        });
+        state.parsed = { id:(link.match(/status\/(\d+)/)||[])[1]||'', text:'已解析 · ' + qs.length + ' 个清晰度',
+                         author:(link.match(/com\/([^/]+)\//)||[])[1]||'', thumb: tp, videos: qs, photos: [] };
+        render();
+      }).catch(function(){ $('#main').innerHTML='<div class="hint">网络错误</div>'; });
+    });
   }
 
   function loadAuthor(name){
