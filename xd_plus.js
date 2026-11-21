@@ -22,6 +22,7 @@
     if (!url) return '';
     return url.replace(/w=\d+/, 'w=' + (w || 360));
   }
+  function num(v){v=parseFloat(v)||0;return v?(Math.round(v*10)/10).toFixed(1):'-';}
   function hasSub(it) { return !!(it.subtitle && String(it.subtitle).trim()); }
   function title(it) { return it.title_zh || it.title || it.code || ''; }
   function year(it) { return (it.date || '').slice(0, 4); }
