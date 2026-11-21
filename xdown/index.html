@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="theme-color" content="#0b0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>XDown 手机版</title>
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,10 +14,13 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
 body{padding-bottom:70px;overscroll-behavior-y:contain}
-header{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-top,0)) 12px}
+header{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:calc(10px + env(safe-area-inset-top,0)) 12px 10px}
 .brand{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .logo{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
 .brand h1{font-size:16px;margin:0;font-weight:700}
+.brand .st{margin-left:auto;font-size:11px;color:var(--dim)}
+.brand .st.on{color:#4ade80}
+.gear{border:1px solid var(--line);background:#161d27;color:#c3ccd9;border-radius:10px;width:32px;height:32px;font-size:15px;margin-left:8px}
 .search{display:flex;gap:8px}
 .search input{flex:1;min-width:0;background:#161d27;border:1px solid var(--line);border-radius:12px;color:var(--fg);padding:11px 13px;font-size:15px;outline:none}
 .search input:focus{border-color:#2f4a6d}
@@ -25,15 +29,15 @@ header{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.96);backdrop-f
 .tab{border:1px solid var(--line);background:#141b24;color:#c3ccd9;border-radius:999px;padding:7px 15px;font-size:13px;white-space:nowrap}
 .tab.on{background:var(--acc);border-color:var(--acc);color:#fff}
 main{padding:12px}
-.hint{color:var(--dim);font-size:13px;text-align:center;padding:26px 10px;line-height:1.7}
+.hint{color:var(--dim);font-size:13px;text-align:center;padding:26px 10px;line-height:1.8}
 .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
 @media(min-width:620px){.grid{grid-template-columns:repeat(3,1fr)}}
 @media(min-width:900px){.grid{grid-template-columns:repeat(4,1fr)}}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;position:relative}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .thumb{position:relative;aspect-ratio:3/4;background:#0d1118;overflow:hidden}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .thumb .play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.18)}
-.thumb .play i{width:52px;height:52px;border-radius:50%;background:rgba(37,99,235,.9);display:flex;align-items:center;justify-content:center}
+.thumb .play i{width:52px;height:52px;border-radius:50%;background:rgba(37,99,235,.92);display:flex;align-items:center;justify-content:center}
 .thumb .play i:after{content:"";border-left:16px solid #fff;border-top:10px solid transparent;border-bottom:10px solid transparent;margin-left:4px}
 .thumb .badge{position:absolute;left:6px;top:6px;background:rgba(0,0,0,.62);border-radius:6px;font-size:11px;padding:2px 7px;color:#dbe4f0}
 .meta{padding:8px 9px 10px}
@@ -44,25 +48,36 @@ main{padding:12px}
 .acts button,.acts a{flex:1;text-align:center;border:1px solid var(--line);background:#182029;color:#cfd8e4;border-radius:9px;padding:7px 0;font-size:12.5px;text-decoration:none}
 .acts .pri{background:var(--acc);border-color:var(--acc);color:#fff}
 .acts .dl{background:#14532d;border-color:#14532d;color:#d7f5e3}
-/* 播放器 */
 #player{position:fixed;inset:0;background:#000;z-index:100;display:none;flex-direction:column}
 #player.on{display:flex}
 #pbar{display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0)) 12px 8px;color:#cfd8e4;font-size:13px;background:#0b0f14}
-#pbar b{font-weight:600;color:#fff}
-#pbar .x{margin-left:auto;width:34px;height:34px;border-radius:50%;border:0;background:#1b2431;color:#fff;font-size:16px}
+#pbar b{font-weight:600;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#pbar .x{width:34px;height:34px;border-radius:50%;border:0;background:#1b2431;color:#fff;font-size:16px}
 #pvid{flex:1;width:100%;background:#000;object-fit:contain}
-.pinfo{padding:10px 14px calc(14px + env(safe-area-inset-bottom,0));color:#9aa6b6;font-size:12.5px;max-height:22vh;overflow:auto}
-/* 底部导航 */
+.pinfo{padding:10px 14px calc(14px + env(safe-area-inset-bottom,0));color:#9aa6b6;font-size:12.5px;max-height:20vh;overflow:auto}
 nav{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:rgba(14,19,26,.98);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0)}
 nav a{flex:1;text-align:center;padding:9px 0 10px;color:#6f7c8d;font-size:11.5px;text-decoration:none}
 nav a.on{color:#4da3ff}
 nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
-.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:rgba(20,28,38,.96);border:1px solid #2b3a4d;color:#e6ebf2;font-size:13px;padding:9px 16px;border-radius:999px;z-index:200;display:none}
+.toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%);background:rgba(20,28,38,.97);border:1px solid #2b3a4d;color:#e6ebf2;font-size:13px;padding:9px 16px;border-radius:999px;z-index:200;display:none;max-width:86vw;text-align:center}
+#set{position:fixed;inset:0;z-index:150;background:rgba(6,8,12,.9);display:none;align-items:center;justify-content:center;padding:18px}
+#set.on{display:flex}
+.sheet{width:100%;max-width:460px;background:#121821;border:1px solid var(--line);border-radius:16px;padding:18px}
+.sheet h3{margin:0 0 6px;font-size:16px}
+.sheet p{margin:0 0 14px;color:var(--dim);font-size:12.5px;line-height:1.6}
+.sheet input{width:100%;background:#0e141c;border:1px solid var(--line);border-radius:11px;color:var(--fg);padding:11px 13px;font-size:14px}
+.sheet .row{display:flex;gap:8px;margin-top:12px}
+.sheet button{flex:1;border:1px solid var(--line);background:#182029;color:#cfd8e4;border-radius:11px;padding:11px 0;font-size:14px}
+.sheet .pri{background:var(--acc);border-color:var(--acc);color:#fff}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand"><div class="logo">X</div><h1>XDown 手机版</h1></div>
+  <div class="brand">
+    <div class="logo">X</div><h1>XDown</h1>
+    <span class="st" id="hubst">未连接电脑</span>
+    <button class="gear" id="gear">⚙</button>
+  </div>
   <div class="search">
     <input id="q" type="search" placeholder="搜索关键词，例如 dance / 舞蹈" enterkeyhint="search" autocomplete="off">
     <button id="go">搜索</button>
@@ -70,11 +85,11 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
   <div class="tabs">
     <button class="tab on" data-v="result">搜索结果</button>
     <button class="tab" data-v="author">作者作品</button>
-    <button class="tab" data-v="saved">我的下载</button>
+    <button class="tab" data-v="saved">我的</button>
   </div>
 </header>
 
-<main id="main"><div class="hint">输入关键词后点「搜索」<br>搜到结果可直接点封面播放</div></main>
+<main id="main"><div class="hint">先在 ⚙ 里填电脑地址<br>再输入关键词搜索</div></main>
 
 <div id="player">
   <div id="pbar"><b id="ptitle">播放</b><button class="x" id="pclose">✕</button></div>
@@ -82,10 +97,23 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
   <div class="pinfo" id="pinfo"></div>
 </div>
 
+<div id="set">
+  <div class="sheet">
+    <h3>连接电脑</h3>
+    <p>在电脑上双击 <b>启动Hub.bat</b>，窗口里会显示一个地址（形如 http://192.168.1.14:8899），填到下面。<br>电脑和手机要连同一个 WiFi。</p>
+    <input id="huburl" placeholder="http://192.168.1.14:8899" inputmode="url" autocomplete="off">
+    <div class="row">
+      <button id="hubsave" class="pri">保存</button>
+      <button id="hubtest">测试连接</button>
+      <button id="hubclose">关闭</button>
+    </div>
+  </div>
+</div>
+
 <nav>
   <a class="on" data-tab="result"><i>🔍</i>搜索</a>
   <a data-tab="author"><i>👤</i>作者</a>
-  <a data-tab="saved"><i>⬇</i>已存</a>
+  <a data-tab="saved"><i>⬇</i>我的</a>
 </nav>
 
 <div class="toast" id="toast"></div>
@@ -93,58 +121,39 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
 <script>
 (function(){
   var $ = function(s){ return document.querySelector(s); };
-  var state = { view:'result', results:[], author:[], authorName:'', saved:[] };
-
+  var state = { view:'result', results:[], author:[], saved:[], hub:'' };
   try { state.saved = JSON.parse(localStorage.getItem('xd_saved')||'[]'); } catch(e){ state.saved=[]; }
+  state.hub = (localStorage.getItem('xd_hub')||'').replace(/\/+$/,'');
 
-  function toast(m){ var t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(function(){t.style.display='none';},2200); }
+  function toast(m){ var t=$('#toast'); t.textContent=m; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(function(){t.style.display='none';},2400); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
-  function saveList(){ try{ localStorage.setItem('xd_saved', JSON.stringify(state.saved)); }catch(e){} }
-
-  function api(path){
-    return fetch(path, {cache:'no-store'}).then(function(r){ return r.json(); });
+  function saveList(){ try{ localStorage.setItem('xd_saved', JSON.stringify(state.saved.slice(0,200))); }catch(e){} }
+  function getJSON(url){
+    return fetch(url, {cache:'no-store'}).then(function(r){ return r.json(); });
   }
-
-  function detail(id){
-    return api('/api/fx?p=' + encodeURIComponent('/2/status/'+id));
-  }
-
-  function media(item){
-    if (!item) return null;
-    var s = item.status || item;
-    var out = { id:s.id, text:s.text||'', author:(s.author&&s.author.screen_name)||'', name:(s.author&&s.author.name)||'',
-                avatar:(s.author&&s.author.avatar_url)||'', videos:[], photos:[] };
-    var m = (s.media && s.media.all) || [];
-    m.forEach(function(x){
-      if (x.type === 'video' || x.type === 'gif') {
-        var u = x.url || (x.variants && x.variants[x.variants.length-1] && x.variants[x.variants.length-1].url);
-        if (u) out.videos.push({ url:u, thumb:x.thumbnail_url||'' });
-      } else if (x.type === 'photo') {
-        if (x.url) out.photos.push(x.url);
-      }
-    });
-    if (!out.videos.length && s.media && s.media.videos) {
-      s.media.videos.forEach(function(v){ if (v.url) out.videos.push({url:v.url, thumb:v.thumbnail_url||''}); });
-    }
-    return out;
+  function setHubStatus(ok, txt){
+    var s=$('#hubst');
+    s.textContent = txt || (ok ? '电脑已连接' : (state.hub ? '连接失败' : '未连接电脑'));
+    s.classList.toggle('on', !!ok);
   }
 
   function render(){
+    var list = current();
     var main = $('#main');
-    var list = state.view==='author' ? state.author : (state.view==='saved' ? state.saved : state.results);
     if (!list.length) {
       main.innerHTML = '<div class="hint">' +
-        (state.view==='saved' ? '还没有保存任何内容<br>播放或下载后会自动记录'
-         : state.view==='author' ? '先在搜索结果里点作者名<br>即可加载 TA 的全部作品'
-         : '输入关键词后点「搜索」<br>搜到结果可直接点封面播放') + '</div>';
+        (state.view==='saved' ? '还没有内容<br>播放或下载后会自动记录'
+         : state.view==='author' ? '先搜到结果，点卡片上的「@作者」<br>即可加载 TA 的全部作品'
+         : (state.hub ? '输入关键词后点「搜索」<br>搜到结果可直接点封面播放'
+                      : '先点右上角 ⚙ 填写电脑地址<br>（电脑上运行 启动Hub.bat）')) + '</div>';
       return;
     }
     var h = '<div class="grid">';
     list.forEach(function(it,i){
-      var th = (it.videos[0] && it.videos[0].thumb) || it.photos[0] || it.avatar || '';
-      h += '<div class="card" data-i="'+i+'">' +
+      var th = (it.videos[0] && it.videos[0].thumb) || it.photos[0] || '';
+      h += '<div class="card">' +
         '<div class="thumb" data-play="'+i+'">' +
-          '<img loading="lazy" src="'+esc(th)+'" alt="">' +
+          (th ? '<img loading="lazy" src="'+esc(th)+'" alt="">' : '<div style="height:100%"></div>') +
           (it.videos.length ? '<div class="play"><i></i></div><div class="badge">视频</div>'
                             : '<div class="badge">图片 '+it.photos.length+'</div>') +
         '</div>' +
@@ -152,74 +161,76 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
           '<div class="t">'+esc(it.text||'')+'</div>' +
           '<div class="a" data-author="'+esc(it.author)+'">@'+esc(it.author)+' <span>· 全部作品</span></div>' +
           '<div class="acts">' +
-            (it.videos.length ? '<button class="pri" data-play="'+i+'">▶ 播放</button><button class="dl" data-dl="'+i+'">⬇ 下载</button>'
-                              : '<a class="pri" href="'+esc(it.photos[0]||'')+'" target="_blank" rel="noopener">查看图片</a>') +
-          '</div>' +
-        '</div></div>';
+            (it.videos.length
+              ? '<button class="pri" data-play="'+i+'">▶ 播放</button><button class="dl" data-dl="'+i+'">⬇ 下载</button>'
+              : '<a class="pri" href="'+esc(it.photos[0]||'')+'" target="_blank" rel="noopener">查看图片</a>') +
+          '</div></div></div>';
     });
     h += '</div>';
     main.innerHTML = h;
   }
 
+  function current(){ return state.view==='author' ? state.author : (state.view==='saved' ? state.saved : state.results); }
+
   function play(it){
-    if (!it.videos.length) { if (it.photos[0]) window.open(it.photos[0],'_blank'); return; }
+    if (!it.videos.length){ if (it.photos[0]) window.open(it.photos[0],'_blank'); return; }
     var v = it.videos[0];
-    $('#ptitle').textContent = '@' + (it.author||'') + ' · ' + (it.text||'').slice(0,18);
+    $('#ptitle').textContent = '@' + (it.author||'') + ' · ' + (it.text||'').slice(0,16);
     var vid = $('#pvid');
+    vid.onerror = function(){
+      if (state.hub && v.url.indexOf(state.hub) !== 0) {
+        vid.onerror = null;
+        vid.src = state.hub + '/stream?u=' + encodeURIComponent(v.url);
+        vid.play().catch(function(){});
+      } else { toast('这个视频播放失败，试试下载'); }
+    };
     vid.src = v.url; vid.load();
     $('#pinfo').textContent = it.text || '';
     $('#player').classList.add('on');
     vid.play().catch(function(){});
-    if (!state.saved.some(function(x){return x.id===it.id;})) {
-      state.saved.unshift(it); saveList();
-    }
+    if (!state.saved.some(function(x){return x.id===it.id;})) { state.saved.unshift(it); saveList(); }
   }
 
   function download(it){
-    if (!it.videos.length) { toast('这条没有视频'); return; }
+    if (!it.videos.length){ toast('这条没有视频'); return; }
+    var url = it.videos[0].url;
     var a = document.createElement('a');
-    a.href = it.videos[0].url; a.download = (it.author||'x')+'_'+it.id+'.mp4';
-    a.target = '_blank'; a.rel='noopener';
+    a.href = state.hub ? (state.hub + '/stream?u=' + encodeURIComponent(url)) : url;
+    a.download = (it.author||'x') + '_' + it.id + '.mp4';
+    a.target = '_blank'; a.rel = 'noopener';
     document.body.appendChild(a); a.click(); a.remove();
-    toast('已开始下载（如未弹出请允许浏览器下载）');
+    toast('开始下载（如无反应请在浏览器里允许下载）');
     if (!state.saved.some(function(x){return x.id===it.id;})) { state.saved.unshift(it); saveList(); }
   }
 
   function search(){
     var q = ($('#q').value||'').trim();
-    if (!q) { toast('请输入关键词'); return; }
-    $('#main').innerHTML = '<div class="hint">搜索中…<br>首次约 5~15 秒</div>';
-    api('/api/xsearch?q='+encodeURIComponent(q)+'&n=16').then(function(j){
-      if (!j.ok || !j.ids || !j.ids.length) { $('#main').innerHTML='<div class="hint">没搜到结果，换个关键词试试</div>'; return; }
-      var ids = j.ids.slice(0,12);
-      var out = [], done = 0;
-      ids.forEach(function(id, idx){
-        detail(id).then(function(d){
-          var m = media(d);
-          if (m && (m.videos.length || m.photos.length)) out[idx]=m;
-        }).catch(function(){}).then(function(){
-          done++;
-          if (done === ids.length) {
-            state.results = out.filter(Boolean);
-            state.view='result'; render();
-            if (!state.results.length) $('#main').innerHTML='<div class="hint">搜到了推文但没有媒体内容</div>';
-          }
-        });
+    if (!q){ toast('请输入关键词'); return; }
+    if (!state.hub){ openSet(); return; }
+    $('#main').innerHTML = '<div class="hint">搜索中…<br>约 10~40 秒</div>';
+    getJSON(state.hub + '/search?q=' + encodeURIComponent(q) + '&n=12').then(function(j){
+      if (!j.ok || !j.ids || !j.ids.length){ $('#main').innerHTML='<div class="hint">没搜到结果，换个关键词</div>'; return; }
+      $('#main').innerHTML = '<div class="hint">解析媒体中…（'+j.ids.length+' 条）</div>';
+      return getJSON(state.hub + '/views?ids=' + encodeURIComponent(j.ids.join(','))).then(function(v){
+        state.results = (v.items||[]);
+        state.view='result'; render();
+        if (!state.results.length) $('#main').innerHTML='<div class="hint">搜到了推文但没有媒体</div>';
       });
-    }).catch(function(){ $('#main').innerHTML='<div class="hint">搜索失败，请重试</div>'; });
+    }).catch(function(){
+      setHubStatus(false, '连接失败');
+      $('#main').innerHTML='<div class="hint">连不上电脑<br>确认电脑开着 Hub、手机同一 WiFi</div>';
+    });
   }
 
   function loadAuthor(name){
     if (!name) return;
-    state.authorName = name;
-    state.view='author';
-    setTab('author');
+    if (!state.hub){ openSet(); return; }
+    state.view='author'; setTab('author');
     $('#main').innerHTML = '<div class="hint">正在加载 @'+esc(name)+' 的作品…</div>';
-    api('/api/fx?p='+encodeURIComponent('/2/profile/'+name+'/media?count=40')).then(function(j){
-      var arr = (j && (j.results || (j.media && j.media.results) || [])) || [];
-      state.author = arr.map(media).filter(function(x){ return x && (x.videos.length||x.photos.length); });
+    getJSON(state.hub + '/author?name=' + encodeURIComponent(name)).then(function(j){
+      state.author = (j.items||[]);
       render();
-      if (!state.author.length) $('#main').innerHTML='<div class="hint">该作者暂无媒体作品</div>';
+      if (!state.author.length) $('#main').innerHTML='<div class="hint">TA 没有可下载的媒体</div>';
     }).catch(function(){ $('#main').innerHTML='<div class="hint">加载失败</div>'; });
   }
 
@@ -227,26 +238,18 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
     document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-v')===v); });
     document.querySelectorAll('nav a').forEach(function(t){ t.classList.toggle('on', t.getAttribute('data-tab')===v); });
   }
+  function show(v){ state.view = v; setTab(v); render(); }
 
-  function show(v){
-    state.view = v; setTab(v); render();
-  }
+  function openSet(){ $('#huburl').value = state.hub || ''; $('#set').classList.add('on'); }
+  function closeSet(){ $('#set').classList.remove('on'); }
 
   document.addEventListener('click', function(e){
     var t = e.target;
-    var pl = t.closest('[data-play]');
-    if (pl){ var i=+pl.getAttribute('data-play'); var list=current(); if(list[i]) play(list[i]); return; }
-    var dl = t.closest('[data-dl]');
-    if (dl){ var j=+dl.getAttribute('data-dl'); var l2=current(); if(l2[j]) download(l2[j]); return; }
-    var au = t.closest('[data-author]');
-    if (au){ loadAuthor(au.getAttribute('data-author')); return; }
-    var tb = t.closest('.tab,nav a');
-    if (tb){ show(tb.getAttribute('data-v')||tb.getAttribute('data-tab')); return; }
+    var pl = t.closest('[data-play]'); if (pl){ var i=+pl.getAttribute('data-play'); var l=current(); if(l[i]) play(l[i]); return; }
+    var dl = t.closest('[data-dl]'); if (dl){ var j=+dl.getAttribute('data-dl'); var l2=current(); if(l2[j]) download(l2[j]); return; }
+    var au = t.closest('[data-author]'); if (au){ loadAuthor(au.getAttribute('data-author')); return; }
+    var tb = t.closest('.tab,nav a'); if (tb){ show(tb.getAttribute('data-v')||tb.getAttribute('data-tab')); return; }
   });
-
-  function current(){
-    return state.view==='author' ? state.author : (state.view==='saved' ? state.saved : state.results);
-  }
 
   $('#go').addEventListener('click', search);
   $('#q').addEventListener('keydown', function(e){ if(e.key==='Enter'){ this.blur(); search(); } });
@@ -254,8 +257,34 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
     var v=$('#pvid'); v.pause(); v.removeAttribute('src'); v.load();
     $('#player').classList.remove('on');
   });
+  $('#gear').addEventListener('click', openSet);
+  $('#hubclose').addEventListener('click', closeSet);
+  $('#hubsave').addEventListener('click', function(){
+    var u = ($('#huburl').value||'').trim().replace(/\/+$/,'');
+    state.hub = u;
+    try { localStorage.setItem('xd_hub', u); } catch(e){}
+    closeSet();
+    if (u) testHub(true); else setHubStatus(false);
+  });
+  $('#hubtest').addEventListener('click', function(){
+    var u = ($('#huburl').value||'').trim().replace(/\/+$/,'');
+    if (!u){ toast('先填地址'); return; }
+    getJSON(u + '/ping').then(function(j){
+      toast(j && j.ok ? ('连接成功 · ' + (j.ip||'')) : '连接失败');
+      if (j && j.ok) setHubStatus(true);
+    }).catch(function(){ toast('连接失败，检查地址和 WiFi'); });
+  });
+
+  function testHub(silent){
+    if (!state.hub) return;
+    getJSON(state.hub + '/ping').then(function(j){
+      setHubStatus(!!(j&&j.ok));
+      if (!silent && j && j.ok) toast('已连接电脑');
+    }).catch(function(){ setHubStatus(false); });
+  }
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+  testHub(true);
   show('result');
 })();
 </script>
