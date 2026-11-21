@@ -1,0 +1,20 @@
+name: probe
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: [".github/workflows/probe.yml"]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: curl javdb mirrors
+        run: |
+          for u in https://javdb570.com/v/n8kRw https://javdb.com/v/n8kRw https://c0.jdbstatic.com/covers/n8/n8kRw.jpg; do
+            code=$(curl -s -o /tmp/out -w "%{http_code}" --max-time 25 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/157.0.0.0 Safari/537.36" "$u" || echo ERR)
+            size=$(wc -c < /tmp/out 2>/dev/null || echo 0)
+            echo "PROBE $u -> $code size=$size"
+          done
