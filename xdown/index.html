@@ -121,7 +121,7 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
 <script>
 (function(){
   var $ = function(s){ return document.querySelector(s); };
-  var state = { view:'result', results:[], author:[], saved:[], hub:'' };
+  var state = { view:'result', results:[], author:[], saved:[], hub:'', parsed:null };
   try { state.saved = JSON.parse(localStorage.getItem('xd_saved')||'[]'); } catch(e){ state.saved=[]; }
   state.hub = (localStorage.getItem('xd_hub')||'').replace(/\/+$/,'');
 
@@ -163,19 +163,23 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
           '<div class="a" data-author="'+esc(it.author)+'">@'+esc(it.author)+' <span>· 全部作品</span></div>' +
           '<div class="acts">' +
             (it.videos.length
-              ? '<button class="pri" data-play="'+i+'">▶ 播放</button><button class="dl" data-dl="'+i+'">⬇ 下载</button>'
+              ? ((it.videos.length>1 && it.videos[0].q)
+                  ? it.videos.map(function(v,k){ return '<button class="'+(k===0?'pri':'')+'" data-play="'+i+'" data-q="'+k+'">▶ '+esc(v.q)+'</button>'; }).join('')
+                  : '<button class="pri" data-play="'+i+'">▶ 播放</button><button class="dl" data-dl="'+i+'">⬇ 下载</button>')
               : '<a class="pri" href="'+esc(it.photos[0]||'')+'" target="_blank" rel="noopener">查看图片</a>') +
-          '</div></div></div>';
+          '</div>' +
+          (it.videos.length>1 && it.videos[0].q ? '<div class="acts"><button data-dl="'+i+'">⬇ 下载首个清晰度</button></div>' : '') +
+          '</div></div>';
     });
     h += '</div>';
     main.innerHTML = h;
   }
 
-  function current(){ return state.view==='author' ? state.author : (state.view==='saved' ? state.saved : state.results); }
+  function current(){ if (state.view==='parse') return state.parsed ? [state.parsed] : []; return state.view==='author' ? state.author : (state.view==='saved' ? state.saved : state.results); }
 
-  function play(it){
+  function play(it, qi){
     if (!it.videos.length){ if (it.photos[0]) window.open(it.photos[0],'_blank'); return; }
-    var v = it.videos[0];
+    var v = it.videos[qi||0] || it.videos[0];
     $('#ptitle').textContent = '@' + (it.author||'') + ' · ' + (it.text||'').slice(0,16);
     var vid = $('#pvid');
     vid.onerror = function(){
@@ -194,7 +198,7 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
 
   function download(it){
     if (!it.videos.length){ toast('这条没有视频'); return; }
-    var url = it.videos[0].url;
+    var url = (it.videos[0] && it.videos[0].url) || '';
     var a = document.createElement('a');
     a.href = state.hub ? (state.hub + '/stream?u=' + encodeURIComponent(url)) : url;
     a.download = (it.author||'x') + '_' + it.id + '.mp4';
@@ -204,10 +208,31 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
     if (!state.saved.some(function(x){return x.id===it.id;})) { state.saved.unshift(it); saveList(); }
   }
 
+  function isTweetUrl(s){ return /(?:x|twitter)\.com\/[A-Za-z0-9_]+\/status\/\d{8,25}/.test(s); }
+  function isAuthorUrl(s){ return /^(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\/[A-Za-z0-9_]{1,20}\/?$/.test(s); }
+
+  function resolveUrl(link){
+    state.view = 'parse';
+    setTab('result');
+    $('#main').innerHTML = '<div class="hint">解析中…</div>';
+    getJSON('/api/ts?u=' + encodeURIComponent(link)).then(function(j){
+      if (!j.ok){ $('#main').innerHTML = '<div class="hint">解析失败：' + esc(j.error||'') + '<br>可以试试先用电脑 Hub</div>'; return; }
+      var qs = (j.videos||[]).map(function(v){
+        var m = (v.src||'').match(/\/(\d{3,4})x(\d{3,4})\//);
+        return { url: v.url, q: m ? (m[1]+'p') : '视频' };
+      });
+      state.parsed = { id: (link.match(/status\/(\d+)/)||[])[1]||'', text: '已解析', author: (link.match(/com\/([^/]+)\//)||[])[1]||'',
+                       thumb: ('/api/img?u=' + encodeURIComponent(j.thumb||'')), videos: qs, photos: (j.images||[]).map(function(x){return x.url;}) };
+      render();
+    }).catch(function(){ $('#main').innerHTML='<div class="hint">网络错误</div>'; });
+  }
+
   function search(){
     var q = ($('#q').value||'').trim();
     if (!q){ toast('请输入关键词'); return; }
-    if (!state.hub){ openSet(); return; }
+    if (isTweetUrl(q)) { resolveUrl(q); return; }
+    if (isAuthorUrl(q)) { loadAuthor((q.replace(/\/$/,'').split('/').pop())); return; }
+    if (!state.hub){ $('#main').innerHTML='<div class="hint">关键词搜索需要电脑 Hub<br>或者直接粘贴推文链接（x.com/xxx/status/...）<br><br>点右上角 ⚙ 可设置电脑地址</div>'; openSet(); return; }
     $('#main').innerHTML = '<div class="hint">搜索中…<br>约 10~40 秒</div>';
     getJSON(state.hub + '/search?q=' + encodeURIComponent(q) + '&n=12').then(function(j){
       if (!j.ok || !j.ids || !j.ids.length){ $('#main').innerHTML='<div class="hint">没搜到结果，换个关键词</div>'; return; }
@@ -246,7 +271,7 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
 
   document.addEventListener('click', function(e){
     var t = e.target;
-    var pl = t.closest('[data-play]'); if (pl){ var i=+pl.getAttribute('data-play'); var l=current(); if(l[i]) play(l[i]); return; }
+    var pl = t.closest('[data-play]'); if (pl){ var i=+pl.getAttribute('data-play'); var l=current(); if(l[i]) play(l[i], +(pl.getAttribute('data-q')||0)); return; }
     var dl = t.closest('[data-dl]'); if (dl){ var j=+dl.getAttribute('data-dl'); var l2=current(); if(l2[j]) download(l2[j]); return; }
     var au = t.closest('[data-author]'); if (au){ loadAuthor(au.getAttribute('data-author')); return; }
     var tb = t.closest('.tab,nav a'); if (tb){ show(tb.getAttribute('data-v')||tb.getAttribute('data-tab')); return; }
