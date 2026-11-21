@@ -49,6 +49,25 @@ def fetch(path, timeout=45):
     return "", None
 
 
+def find_shot(code):
+    """探测 javfree 长截图是否存在（先直连，失败走本地代理）"""
+    if not code:
+        return ""
+    url = "https://cf.javfree.me/HLIC/%s-demosaic.jpeg" % code.upper()
+    base = ["curl", "-sIL", "--max-time", "15", "-o", os.devnull, "-w", "%{http_code}", "-A", UA]
+    attempts = [base + [url],
+                base + ["-x", "http://127.0.0.1:7890", url]]
+    for cmd in attempts:
+        try:
+            out = subprocess.run(cmd, capture_output=True, timeout=25)
+            code_out = out.stdout.decode("utf-8", "ignore").strip()
+            if code_out.endswith("200"):
+                return url
+        except Exception:
+            continue
+    return ""
+
+
 def _norm(v):
     return re.sub(r"[^a-z0-9]", "", (v or "").lower())
 
@@ -156,6 +175,7 @@ def parse_detail(html, url):
                 pass
 
     sub_url = find_zh_subtitle(code)
+    shot_url = find_shot(code)
 
     return {
         "actors": actors,
@@ -180,7 +200,7 @@ def parse_detail(html, url):
         "rawScore": score,
         "score": score,
         "series": series,
-        "shot": "",
+        "shot": shot_url,
         "size": 0,
         "subtitle": sub_url,
         "title": title,
@@ -265,6 +285,24 @@ def main():
                 filled += 1
                 log("   补字幕 %-12s %s" % (code, u.split("/")[-1]))
             time.sleep(0.2)
+        # 顺带给缺 shot 的记录补长截图
+        shot_fixed = 0
+        for x in items:
+            if shot_fixed >= args.backfill:
+                break
+            if (x.get("shot") or "").strip():
+                continue
+            code2 = (x.get("code") or "").upper()
+            if not code2:
+                continue
+            u2 = find_shot(code2)
+            if u2:
+                x["shot"] = u2
+                shot_fixed += 1
+                log("   补长截图 %-12s" % code2)
+            time.sleep(0.1)
+        log("补长截图:", shot_fixed)
+
         try:
             json.dump({"checked": sorted(checked)}, open(SUBCHK, "w", encoding="utf-8"),
                       ensure_ascii=False)
