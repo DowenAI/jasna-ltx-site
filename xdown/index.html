@@ -217,12 +217,13 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
     $('#main').innerHTML = '<div class="hint">解析中…</div>';
     getJSON('/api/ts?u=' + encodeURIComponent(link)).then(function(j){
       if (!j.ok){ $('#main').innerHTML = '<div class="hint">解析失败：' + esc(j.error||'') + '<br>可以试试先用电脑 Hub</div>'; return; }
+      var thumbP = j.thumb ? ('/api/img?u=' + encodeURIComponent(j.thumb)) : '';
       var qs = (j.videos||[]).map(function(v){
         var m = (v.src||'').match(/\/(\d{3,4})x(\d{3,4})\//);
-        return { url: v.url, q: m ? (m[1]+'p') : '视频' };
+        return { url: v.url, q: m ? (m[1]+'p') : '视频', thumb: thumbP };
       });
       state.parsed = { id: (link.match(/status\/(\d+)/)||[])[1]||'', text: '已解析', author: (link.match(/com\/([^/]+)\//)||[])[1]||'',
-                       thumb: ('/api/img?u=' + encodeURIComponent(j.thumb||'')), videos: qs, photos: (j.images||[]).map(function(x){return x.url;}) };
+                       thumb: thumbP, videos: qs, photos: (j.images||[]).map(function(x){return x.url;}) };
       render();
     }).catch(function(){ $('#main').innerHTML='<div class="hint">网络错误</div>'; });
   }
