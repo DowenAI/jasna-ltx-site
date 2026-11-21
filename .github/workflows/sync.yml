@@ -1,13 +1,8 @@
-name: 自动同步 Jasna-LTX 资源并部署
-
+name: 自动更新 Jasna-LTX 数据
 on:
   schedule:
     - cron: '0 */6 * * *'
   workflow_dispatch: {}
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'README.md'
 
 permissions:
   contents: write
@@ -19,44 +14,37 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - name: 检出仓库
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 1
 
-      - name: 设置 Node.js
-        uses: actions/setup-node@v4
+      - name: 设置 Python
+        uses: actions/setup-python@v5
         with:
-          node-version: '22'
+          python-version: '3.12'
 
-      - name: 运行同步脚本
-        id: sync
-        run: node scripts/sync.js
-        env:
-          NYAA_BASE: ${{ vars.NYAA_BASE || 'https://sukebei.nyaa.si' }}
-          NYAA_QUERY: ${{ vars.NYAA_QUERY || 'LTX' }}
-          MAX_ITEMS: '300'
+      - name: 抓取 JavDB 最新作品
+        run: python scripts/sync_javdb.py --max-add 20
 
       - name: 检查是否有变更
         id: verify
         run: |
-          if git diff --quiet && git diff --cached --quiet; then
+          if git diff --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "没有新资源"
+            echo "没有新作品"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "检测到数据变更"
+            echo "检测到新作品"
           fi
 
-      - name: 提交并推送更新
+      - name: 提交并推送
         if: steps.verify.outputs.changed == 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A data/
-          git commit -m "chore: 自动同步 LTX 资源 $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]" || echo "无变更可提交"
+          git commit -m "chore: 自动更新作品数据 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
           git push
-
