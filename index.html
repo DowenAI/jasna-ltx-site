@@ -443,16 +443,14 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
   }
 
 
-  // ---- 封面加速：covers 走图片代理 + 懒加载 ----
+  // ---- 封面/长截图加速：走本站 /api/img 代理 ----
   var COVER_HOST = /(jdbstatic\.com\/covers\/)|(javfree\.me\/)/;
-  var PROXY = 'https://wsrv.nl/?w=360&h=500&fit=cover&output=webp&q=80&url=';
-  var rafPending = false;
   function proxyUrl(u){
-    if (/javfree\.me/.test(u)) {
-      return 'https://wsrv.nl/?w=900&output=webp&q=80&url=' + encodeURIComponent(u);
-    }
-    return PROXY + encodeURIComponent(u);
+    var w = /javfree\.me/.test(u) ? 900 : 360;
+    var h = /javfree\.me/.test(u) ? 0 : 500;
+    return '/api/img?w=' + w + (h ? '&h=' + h : '') + '&u=' + encodeURIComponent(u);
   }
+  var rafPending = false;
   function fixImgs(){
     if (rafPending) return;
     rafPending = true;
@@ -466,11 +464,11 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
           img.setAttribute('decoding', 'async');
         }
         var src = img.getAttribute('src') || '';
-        if (src && COVER_HOST.test(src)) {
+        if (src && COVER_HOST.test(src) && src.indexOf('/api/img') < 0) {
           img.setAttribute('data-xd-origin', src);
           img.onerror = function(){
             var o = this.getAttribute('data-xd-origin');
-            if (o && this.src !== o) this.src = o;
+            if (o && this.src.indexOf(o) < 0) this.src = o;
           };
           img.src = proxyUrl(src);
         }
