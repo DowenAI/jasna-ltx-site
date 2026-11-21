@@ -151,9 +151,10 @@ nav a i{display:block;font-size:17px;line-height:20px;font-style:normal}
     var h = '<div class="grid">';
     list.forEach(function(it,i){
       var th = (it.videos[0] && it.videos[0].thumb) || it.photos[0] || '';
+      if (th && state.hub) th = state.hub + '/stream?u=' + encodeURIComponent(th);
       h += '<div class="card">' +
         '<div class="thumb" data-play="'+i+'">' +
-          (th ? '<img loading="lazy" src="'+esc(th)+'" alt="">' : '<div style="height:100%"></div>') +
+          (th ? '<img loading="lazy" src="'+esc(th)+'" alt="" onerror="this.style.opacity=.12">' : '<div style="height:100%"></div>') +
           (it.videos.length ? '<div class="play"><i></i></div><div class="badge">视频</div>'
                             : '<div class="badge">图片 '+it.photos.length+'</div>') +
         '</div>' +
