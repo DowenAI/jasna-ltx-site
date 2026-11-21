@@ -89,7 +89,8 @@ export async function onRequest(context) {
     }
 
     if (path === '/api/comments' && method === 'GET') {
-      const code = str(url.searchParams.get('code'), 64).toUpperCase();
+      const code = str(url.searchParams.get('code') || url.searchParams.get('movie')
+      || url.searchParams.get('id') || '', 64).toUpperCase();
       const client = str(url.searchParams.get('client'), 128);
       if (!code) return err('missing code');
       const items = await listItems(KV, 'comment:' + code + ':');
@@ -107,7 +108,7 @@ export async function onRequest(context) {
 
     if (path === '/api/comments' && method === 'POST') {
       const b = await readJSON(request);
-      const code = str(b.code, 64).toUpperCase();
+      const code = str(b.code || b.movie || b.id || '', 64).toUpperCase();
       const body = str(b.body, 1000);
       const client = str(b.client, 128) || 'anon';
       if (!code || !body) return err('missing code or body');
