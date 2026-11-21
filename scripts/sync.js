@@ -22,7 +22,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const DATA_FILE = path.join(ROOT, 'data', 'movies.json');
+const DATA_FILE = path.join(ROOT, 'data', 'nyaa-incoming.json');
 
 const NYAA_BASE = process.env.NYAA_BASE || 'https://sukebei.nyaa.si';
 const NYAA_QUERY = process.env.NYAA_QUERY || 'LTX';
@@ -119,8 +119,10 @@ async function main() {
   log('开始同步，源：', NYAA_BASE, '关键词：', NYAA_QUERY);
 
   // 读现有数据
-  const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
-  if (!Array.isArray(data.items)) throw new Error('movies.json 缺少 items 数组');
+  let data;
+  try { data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8')); }
+  catch (e) { data = { items: [], updated_at: null, nyaa: {}, actors: [], genres: [] }; }
+  if (!Array.isArray(data.items)) data.items = [];
 
   // 现有 key 集合
   const existing = new Set(data.items.map(dedupKey));
