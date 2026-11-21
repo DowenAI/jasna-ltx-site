@@ -54,3 +54,9 @@
 .xdp-similar{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
 .xdp-actors-inline{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .xdp-a{background:#141a22;border:1px solid #23303f;color:#c7cfda;border-radius:999px;padding:4px 12px;font-size:12px;cursor:pointer}
+
+#xdp-zoom{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.96);display:none;overflow:hidden;cursor:zoom-out}
+#xdp-zoom.on{display:flex;align-items:center;justify-content:center}
+#xdp-zoom img{max-width:96vw;max-height:94vh;object-fit:contain;cursor:zoom-out;transition:transform .05s linear;user-select:none}
+#xdp-zoom-tip{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);color:#9aa4b2;font-size:12px;background:rgba(10,14,20,.7);padding:6px 14px;border-radius:999px}
+.xdp-dstage img{cursor:zoom-in}
