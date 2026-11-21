@@ -48,6 +48,45 @@ def fetch(path, timeout=45):
     return "", None
 
 
+def _norm(v):
+    return re.sub(r"[^a-z0-9]", "", (v or "").lower())
+
+
+def find_zh_subtitle(code, tries=4):
+    """到 subtitlecat 查该番号有没有中文字幕（必须完整番号匹配），返回 srt 链接或空串"""
+    import urllib.parse
+    want = _norm(code)
+    if not want:
+        return ""
+    try:
+        html = curl("https://www.subtitlecat.com/index.php?search=" + urllib.parse.quote(code))
+        if not html:
+            return ""
+        ups = []
+        for m in re.findall(r'href="(subs/[^"]+)"', html):
+            name = urllib.parse.unquote(m)
+            base = name.split("/")[-1]
+            if want not in _norm(base):          # 完整番号必须出现
+                continue
+            if base.lower().endswith(".srt"):
+                if re.search(r"zh[-_]?cn|zh[-_]?tw|chs|sehuatang", base, re.I):
+                    return ("https://www.subtitlecat.com/" + m) if not m.startswith("http") else m
+                continue
+            ups.append(m)
+        for m in ups[:tries]:
+            page = curl("https://www.subtitlecat.com/" + m)
+            for srt in re.findall(r'href="([^"]+\.srt)"', page):
+                fname = srt.split("/")[-1]
+                if want not in _norm(fname):
+                    continue
+                if re.search(r"zh[-_]cn|zh[-_]tw|chs", fname, re.I):
+                    return srt if srt.startswith("http") else ("https://www.subtitlecat.com" + srt)
+            time.sleep(0.3)
+    except Exception as e:
+        log("   字幕查询失败:", str(e)[:50])
+    return ""
+
+
 def clean(s):
     s = re.sub(r"<[^>]+>", " ", s or "")
     for a, b in (("&nbsp;", " "), ("&amp;", "&"), ("&quot;", '"'),
@@ -115,6 +154,8 @@ def parse_detail(html, url):
             except Exception:
                 pass
 
+    sub_url = find_zh_subtitle(code)
+
     return {
         "actors": actors,
         "added_at": int(time.time() * 1000),
@@ -140,7 +181,7 @@ def parse_detail(html, url):
         "series": series,
         "shot": "",
         "size": 0,
-        "subtitle": "",
+        "subtitle": sub_url,
         "title": title,
         "title_zh": title,
         "url": url,
@@ -168,6 +209,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--max-add", type=int, default=20)
+    ap.add_argument("--backfill", type=int, default=15)
     args = ap.parse_args()
 
     if not os.path.exists(DATA):
@@ -197,12 +239,27 @@ def main():
         log("  + %-12s %s  %s" % (it["code"], it["date"], it["title"][:34]))
         time.sleep(0.3)
 
+    # 补录：给缺少字幕信息的老记录查一次
+    filled = 0
+    if args.backfill > 0:
+        pool = [x for x in (added + items) if not (x.get("subtitle") or "").strip()]
+        for x in pool[:args.backfill]:
+            if not x.get("code"):
+                continue
+            u = find_zh_subtitle(x["code"])
+            if u:
+                x["subtitle"] = u
+                filled += 1
+                log("   补字幕 %-12s %s" % (x["code"], u.split("/")[-1]))
+            time.sleep(0.2)
+        log("补录字幕:", filled)
+
     log("本次新增:", len(added))
     if args.dry_run:
         if added:
             log("样例:", json.dumps(added[0], ensure_ascii=False)[:400])
         return 0
-    if not added:
+    if not added and filled == 0:
         return 0
 
     data["items"] = added + items
