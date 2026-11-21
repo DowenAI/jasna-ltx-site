@@ -446,9 +446,12 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
   // ---- 封面/长截图加速：走本站 /api/img 代理 ----
   var COVER_HOST = /(jdbstatic\.com\/covers\/)|(javfree\.me\/)/;
   function proxyUrl(u){
-    var w = /javfree\.me/.test(u) ? 900 : 360;
-    var h = /javfree\.me/.test(u) ? 0 : 500;
-    return '/api/img?w=' + w + (h ? '&h=' + h : '') + '&u=' + encodeURIComponent(u);
+    if (/javfree\.me/.test(u)) {
+      // 长截图：wsrv 拉不到，用本站代理
+      return '/api/img?u=' + encodeURIComponent(u);
+    }
+    // 封面：wsrv 可压缩+裁切（191KB -> ~10KB）
+    return 'https://wsrv.nl/?w=360&h=500&fit=cover&output=webp&q=80&url=' + encodeURIComponent(u);
   }
   var rafPending = false;
   function fixImgs(){
@@ -468,7 +471,12 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
           img.setAttribute('data-xd-origin', src);
           img.onerror = function(){
             var o = this.getAttribute('data-xd-origin');
-            if (o && this.src.indexOf(o) < 0) this.src = o;
+            if (!o) return;
+            if (this.src.indexOf('wsrv.nl') >= 0) {
+              this.src = '/api/img?u=' + encodeURIComponent(o);   // 回退本站代理
+              return;
+            }
+            if (this.src.indexOf(o) < 0) this.src = o;
           };
           img.src = proxyUrl(src);
         }
