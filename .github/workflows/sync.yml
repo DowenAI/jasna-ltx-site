@@ -56,7 +56,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/movies.json
+          git add -A data/
           git commit -m "chore: 自动同步 LTX 资源 $(date -u +%Y-%m-%dT%H:%M:%SZ) [skip ci]" || echo "无变更可提交"
           git push
 
