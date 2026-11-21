@@ -68,6 +68,19 @@ def find_shot(code):
     return ""
 
 
+def proxy_wrap(u, w=360, h=500):
+    """把外链图片转成本站代理地址（避免浏览器 ORB 拦截）"""
+    import urllib.parse
+    if not u or "/api/img" in u:
+        return u
+    if "jdbstatic.com" not in u and "javfree.me" not in u:
+        return u
+    q = "/api/img?w=%d&u=" % w
+    if h and w == 360:
+        q = "/api/img?w=%d&h=%d&u=" % (w, h)
+    return q + urllib.parse.quote(u, safe="")
+
+
 def _norm(v):
     return re.sub(r"[^a-z0-9]", "", (v or "").lower())
 
@@ -182,7 +195,7 @@ def parse_detail(html, url):
         "added_at": int(time.time() * 1000),
         "code": code,
         "comments": 0,
-        "cover": cover,
+        "cover": proxy_wrap(cover),
         "date": date,
         "director": director,
         "genres": genres,
@@ -200,7 +213,7 @@ def parse_detail(html, url):
         "rawScore": score,
         "score": score,
         "series": series,
-        "shot": shot_url,
+        "shot": proxy_wrap(shot_url, w=900, h=None),
         "size": 0,
         "subtitle": sub_url,
         "title": title,
