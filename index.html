@@ -344,16 +344,12 @@
 </script>
 
 <style id="xd-enhance-css">
-#xd-bar{position:fixed;right:16px;bottom:72px;z-index:99999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
-#xd-bar button{border:0;border-radius:999px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);font-size:13px;font-weight:600;transition:transform .15s,opacity .15s}
-#xd-bar button:active{transform:scale(.96)}
-#xd-upd{background:#2563eb;color:#fff}
-#xd-upd[disabled]{opacity:.6;cursor:default}
-#xd-sub{background:#1f2937;color:#e5e7eb}
-#xd-sub.on{background:#16a34a;color:#fff}
-#xd-tip{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(17,24,39,.94);color:#fff;padding:10px 18px;border-radius:10px;font:13px system-ui;z-index:100000;display:none;max-width:80vw;text-align:center}
+#xd-tip{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(17,24,39,.95);color:#fff;padding:10px 18px;border-radius:10px;font:13px system-ui;z-index:100000;display:none;max-width:80vw;text-align:center}
 .xd-badge{position:absolute;top:6px;left:6px;background:#16a34a;color:#fff;font:11px/1 system-ui;padding:3px 6px;border-radius:5px;z-index:5;letter-spacing:.5px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
+#xd-sub.xd-on{color:#22c55e!important}
+#xd-sub.xd-on .icon{stroke:#22c55e!important}
+#xd-upd:disabled{opacity:.6;cursor:default}
 </style>
 <script id="xd-enhance-js">
 (function(){
@@ -397,100 +393,87 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
     }
   }
 
-  function buildBar(){
-    if (document.getElementById('xd-bar')) return;
-    var bar = document.createElement('div'); bar.id = 'xd-bar';
-    var upd = document.createElement('button'); upd.id='xd-upd'; upd.textContent = '🔄 立即更新';
-    var sub = document.createElement('button'); sub.id='xd-sub'; sub.textContent = '中字筛选';
-    bar.appendChild(upd); bar.appendChild(sub);
-    var t = document.createElement('div'); t.id='xd-tip';
-    document.body.appendChild(bar); document.body.appendChild(t);
+  var ICON_UPD = '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"></path><path d="M21 3v6h-6"></path></svg>';
+  var ICON_SUB = '<svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"></rect><path d="M7 14h4M13 14h4"></path></svg>';
+
+  function buildToolbar(){
+    if (document.getElementById('xd-upd')) return;
+    var rand = document.querySelector('.header button.random') ||
+               document.querySelector('.header .sort');
+    if (!rand) return;
+
+    function cloneAttrs(el, target){
+      target.className = rand.className;
+      for (var i = 0; i < rand.attributes.length; i++) {
+        var at = rand.attributes[i];
+        if (at.name.indexOf('data-v-') === 0) target.setAttribute(at.name, at.value);
+      }
+    }
+
+    var upd = document.createElement('button');
+    upd.id = 'xd-upd'; upd.type = 'button';
+    upd.title = '立即抓取最新作品'; upd.setAttribute('aria-label', '立即抓取最新作品');
+    upd.innerHTML = ICON_UPD + '<span>立即更新</span>';
+
+    var sub = document.createElement('button');
+    sub.id = 'xd-sub'; sub.type = 'button';
+    sub.title = '只看有中文字幕的作品'; sub.setAttribute('aria-label', '只看有中文字幕的作品');
+    sub.innerHTML = ICON_SUB + '<span>中文字幕</span>';
+
+    cloneAttrs(rand, upd); cloneAttrs(rand, sub);
+    rand.parentElement.insertBefore(sub, rand);
+    rand.parentElement.insertBefore(upd, sub);
+
+    var t = document.createElement('div'); t.id = 'xd-tip';
+    if (!document.getElementById('xd-tip')) document.body.appendChild(t);
 
     var only = localStorage.getItem('xd_only_sub') === '1';
-    if (only){ document.body.classList.add('xd-only-sub'); sub.classList.add('on'); }
+    if (only){ document.body.classList.add('xd-only-sub'); sub.classList.add('xd-on'); }
 
     sub.onclick = function(){
       var on = document.body.classList.toggle('xd-only-sub');
-      sub.classList.toggle('on', on);
+      sub.classList.toggle('xd-on', on);
       localStorage.setItem('xd_only_sub', on ? '1' : '0');
-      tip(on ? '只显示中文字幕作品（共 ' + (SUBS ? Object.keys(SUBS).length : '?') + ' 部）' : '已显示全部作品');
+      tip(on ? '只看中文字幕（共 ' + (SUBS ? Object.keys(SUBS).length : '?') + ' 部）' : '已显示全部作品');
     };
 
     upd.onclick = function(){
-      upd.disabled = true; upd.textContent = '⏳ 更新中…';
+      upd.disabled = true;
+      upd.querySelector('span').textContent = '更新中…';
       fetch('/api/sync', {method:'POST'}).then(function(r){ return r.json(); }).then(function(j){
         if (j && j.ok){
           tip('已触发更新，约 1~3 分钟后完成，页面会自动刷新', 6000);
           var t0 = Date.now();
           var timer = setInterval(function(){
-            if (Date.now() - t0 > 240000){ clearInterval(timer); upd.disabled=false; upd.textContent='🔄 立即更新'; return; }
+            if (Date.now() - t0 > 240000){
+              clearInterval(timer); upd.disabled=false;
+              upd.querySelector('span').textContent='立即更新'; return;
+            }
             fetch('/api/status?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(s){
               if (s && s.data && s.data.updated_at){
-                var ts = new Date(s.data.updated_at).getTime();
-                if (ts > t0){ clearInterval(timer); location.reload(); }
+                if (new Date(s.data.updated_at).getTime() > t0){ clearInterval(timer); location.reload(); }
               }
             }).catch(function(){});
           }, 8000);
         } else {
           tip('更新失败：' + ((j && j.error) || '未知错误'), 6000);
-          upd.disabled = false; upd.textContent = '🔄 立即更新';
+          upd.disabled = false; upd.querySelector('span').textContent = '立即更新';
         }
       }).catch(function(e){
         tip('请求失败：' + e, 5000);
-        upd.disabled = false; upd.textContent = '🔄 立即更新';
+        upd.disabled = false; upd.querySelector('span').textContent = '立即更新';
       });
     };
   }
 
-
-  // ---- 封面/长截图加速：走本站 /api/img 代理 ----
-  var COVER_HOST = /(jdbstatic\.com\/covers\/)|(javfree\.me\/)/;
-  function proxyUrl(u){
-    if (/javfree\.me/.test(u)) {
-      // 长截图：wsrv 拉不到，用本站代理
-      return '/api/img?u=' + encodeURIComponent(u);
-    }
-    // 封面：wsrv 可压缩+裁切（191KB -> ~10KB）
-    return 'https://wsrv.nl/?w=360&h=500&fit=cover&output=webp&q=80&url=' + encodeURIComponent(u);
-  }
-  var rafPending = false;
-  function fixImgs(){
-    if (rafPending) return;
-    rafPending = true;
-    requestAnimationFrame(function(){
-      rafPending = false;
-      var imgs = document.querySelectorAll('img');
-      for (var i = 0; i < imgs.length; i++) {
-        var img = imgs[i];
-        if (!img.getAttribute('loading')) {
-          img.setAttribute('loading', 'lazy');
-          img.setAttribute('decoding', 'async');
-        }
-        var src = img.getAttribute('src') || '';
-        if (src && COVER_HOST.test(src) && src.indexOf('/api/img') < 0) {
-          img.setAttribute('data-xd-origin', src);
-          img.onerror = function(){
-            var o = this.getAttribute('data-xd-origin');
-            if (!o) return;
-            if (this.src.indexOf('wsrv.nl') >= 0) {
-              this.src = '/api/img?u=' + encodeURIComponent(o);   // 回退本站代理
-              return;
-            }
-            if (this.src.indexOf(o) < 0) this.src = o;
-          };
-          img.src = proxyUrl(src);
-        }
-      }
-    });
-  }
   function boot(){
-    buildBar();
+    buildToolbar();
     fetch('data/subtitles.json').then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
       if (!j) return;
       SUBS = {}; (j.codes || []).forEach(function(c){ SUBS[c] = 1; });
       READY = true;
       paint();
-      var mo = new MutationObserver(function(){ paint(); fixImgs(); });
+      var mo = new MutationObserver(function(){ buildToolbar(); paint(); fixImgs(); });
       mo.observe(document.body, {childList:true, subtree:true});
       fixImgs();
     }).catch(function(){});
