@@ -350,6 +350,7 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
 #xd-sub.xd-on{color:#22c55e!important}
 #xd-sub.xd-on .icon{stroke:#22c55e!important}
 #xd-upd:disabled{opacity:.6;cursor:default}
+#xd-upd,#xd-sub{margin-left:0!important}
 </style>
 <script id="xd-enhance-js">
 (function(){
@@ -421,8 +422,12 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
     sub.innerHTML = ICON_SUB + '<span>中文</span>';
 
     cloneAttrs(rand, upd); cloneAttrs(rand, sub);
-    rand.parentElement.insertBefore(sub, rand);
-    rand.parentElement.insertBefore(upd, sub);
+    upd.style.setProperty('margin-left', '0', 'important');
+    sub.style.setProperty('margin-left', '0', 'important');
+    // 插到「随机」之后，保持间距和其他按钮一致
+    var anchor = rand.nextSibling;
+    rand.parentElement.insertBefore(upd, anchor);
+    rand.parentElement.insertBefore(sub, upd.nextSibling);
 
     var t = document.createElement('div'); t.id = 'xd-tip';
     if (!document.getElementById('xd-tip')) document.body.appendChild(t);
