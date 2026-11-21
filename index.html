@@ -279,6 +279,7 @@
 <style id="xd-cover-css">
 .card img{object-fit:cover!important;object-position:50% 22%!important;background:#0b0f14}
 </style>
+<link rel="stylesheet" href="xd_plus.css?v=1">
 </head>
 <body>
 <!-- 蜜罐：真人看不见、点不到；自动抓页面链接的程序才会访问（worker/src/pass.ts，robots.txt 禁止抓 /api/） -->
@@ -478,14 +479,15 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
       SUBS = {}; (j.codes || []).forEach(function(c){ SUBS[c] = 1; });
       READY = true;
       paint();
-      var mo = new MutationObserver(function(){ buildToolbar(); paint(); fixImgs(); });
+      var mo = new MutationObserver(function(){ buildToolbar(); paint(); if (typeof fixImgs === 'function') fixImgs(); });
       mo.observe(document.body, {childList:true, subtree:true});
-      fixImgs();
+      if (typeof fixImgs === 'function') fixImgs();
     }).catch(function(){});
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
 </script>
+<script src="xd_plus.js?v=1" defer></script>
 </body>
 </html>
