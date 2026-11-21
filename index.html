@@ -339,5 +339,119 @@
   if (note) note.textContent = T[l][1]
 })()
 </script>
+
+<style id="xd-enhance-css">
+#xd-bar{position:fixed;right:16px;bottom:72px;z-index:99999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;font:13px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+#xd-bar button{border:0;border-radius:999px;padding:10px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);font-size:13px;font-weight:600;transition:transform .15s,opacity .15s}
+#xd-bar button:active{transform:scale(.96)}
+#xd-upd{background:#2563eb;color:#fff}
+#xd-upd[disabled]{opacity:.6;cursor:default}
+#xd-sub{background:#1f2937;color:#e5e7eb}
+#xd-sub.on{background:#16a34a;color:#fff}
+#xd-tip{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:rgba(17,24,39,.94);color:#fff;padding:10px 18px;border-radius:10px;font:13px system-ui;z-index:100000;display:none;max-width:80vw;text-align:center}
+.xd-badge{position:absolute;top:6px;left:6px;background:#16a34a;color:#fff;font:11px/1 system-ui;padding:3px 6px;border-radius:5px;z-index:5;letter-spacing:.5px;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
+</style>
+<script id="xd-enhance-js">
+(function(){
+  if (window.__xdEnh) return; window.__xdEnh = 1;
+  var SUBS = null, READY = false;
+
+  function tip(msg, ms){
+    var t = document.getElementById('xd-tip');
+    if(!t) return;
+    t.textContent = msg; t.style.display = 'block';
+    clearTimeout(t.__tm);
+    t.__tm = setTimeout(function(){ t.style.display='none'; }, ms || 3200);
+  }
+
+  // 从卡片里取番号：aria-label="在 javdb 打开 ALDN-628 的详情页"
+  function codeOf(card){
+    var a = card.querySelector('a.detail[aria-label]');
+    if (a){
+      var m = /打开\s+(.+?)\s+的详情页/.exec(a.getAttribute('aria-label') || '');
+      if (m) return m[1].toUpperCase();
+    }
+    var t = (card.textContent || '');
+    var m2 = /([A-Z][A-Z0-9]{1,8}-\d{2,6})/.exec(t);
+    return m2 ? m2[1].toUpperCase() : '';
+  }
+
+  function paint(){
+    if (!SUBS) return;
+    var cards = document.querySelectorAll('.card.clickable:not([data-xd-scan])');
+    for (var i=0;i<cards.length;i++){
+      var c = cards[i]; c.setAttribute('data-xd-scan','1');
+      var code = codeOf(c);
+      if (!code) continue;
+      if (SUBS[code]){
+        c.setAttribute('data-xd-sub','1');
+        if (getComputedStyle(c).position === 'static') c.style.position = 'relative';
+        var b = document.createElement('span');
+        b.className = 'xd-badge'; b.textContent = '中字';
+        c.appendChild(b);
+      }
+    }
+  }
+
+  function buildBar(){
+    if (document.getElementById('xd-bar')) return;
+    var bar = document.createElement('div'); bar.id = 'xd-bar';
+    var upd = document.createElement('button'); upd.id='xd-upd'; upd.textContent = '🔄 立即更新';
+    var sub = document.createElement('button'); sub.id='xd-sub'; sub.textContent = '中字筛选';
+    bar.appendChild(upd); bar.appendChild(sub);
+    var t = document.createElement('div'); t.id='xd-tip';
+    document.body.appendChild(bar); document.body.appendChild(t);
+
+    var only = localStorage.getItem('xd_only_sub') === '1';
+    if (only){ document.body.classList.add('xd-only-sub'); sub.classList.add('on'); }
+
+    sub.onclick = function(){
+      var on = document.body.classList.toggle('xd-only-sub');
+      sub.classList.toggle('on', on);
+      localStorage.setItem('xd_only_sub', on ? '1' : '0');
+      tip(on ? '只显示中文字幕作品（共 ' + (SUBS ? Object.keys(SUBS).length : '?') + ' 部）' : '已显示全部作品');
+    };
+
+    upd.onclick = function(){
+      upd.disabled = true; upd.textContent = '⏳ 更新中…';
+      fetch('/api/sync', {method:'POST'}).then(function(r){ return r.json(); }).then(function(j){
+        if (j && j.ok){
+          tip('已触发更新，约 1~3 分钟后完成，页面会自动刷新', 6000);
+          var t0 = Date.now();
+          var timer = setInterval(function(){
+            if (Date.now() - t0 > 240000){ clearInterval(timer); upd.disabled=false; upd.textContent='🔄 立即更新'; return; }
+            fetch('/api/status?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(s){
+              if (s && s.data && s.data.updated_at){
+                var ts = new Date(s.data.updated_at).getTime();
+                if (ts > t0){ clearInterval(timer); location.reload(); }
+              }
+            }).catch(function(){});
+          }, 8000);
+        } else {
+          tip('更新失败：' + ((j && j.error) || '未知错误'), 6000);
+          upd.disabled = false; upd.textContent = '🔄 立即更新';
+        }
+      }).catch(function(e){
+        tip('请求失败：' + e, 5000);
+        upd.disabled = false; upd.textContent = '🔄 立即更新';
+      });
+    };
+  }
+
+  function boot(){
+    buildBar();
+    fetch('data/subtitles.json').then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+      if (!j) return;
+      SUBS = {}; (j.codes || []).forEach(function(c){ SUBS[c] = 1; });
+      READY = true;
+      paint();
+      new MutationObserver(function(){ paint(); }).observe(document.body, {childList:true, subtree:true});
+    }).catch(function(){});
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
 </body>
 </html>
