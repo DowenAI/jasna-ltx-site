@@ -256,7 +256,23 @@ def main():
     log("现有作品:", len(items))
 
     ids = candidate_ids()
+    # 兜底 1：列表页拿不到，多半是瞬时 403/429 或 WAF 抽风，等一会儿再试两次
+    for attempt in range(2):
+        if ids:
+            break
+        wait = 30 if attempt == 0 else 90
+        log("候选列表为空，%d 秒后重试（第 %d 次）" % (wait, attempt + 1))
+        time.sleep(wait)
+        ids = candidate_ids()
     log("候选视频:", len(ids))
+    # 兜底 2：仍然为空 → 本轮视为受阻，不写数据，交给工作流做熔断
+    if not ids:
+        log("SYNC_STATUS=blocked candidates=0 reason=empty_listing")
+        return 0
+    # 兜底 3：候选数异常偏大 → 页面结构变了或抓到推荐/全站列表，这一轮不写入
+    if len(ids) > 500:
+        log("SYNC_STATUS=blocked candidates=%d reason=too_many" % len(ids))
+        return 0
 
     added = []
     for vid in ids:
@@ -329,6 +345,7 @@ def main():
             log("样例:", json.dumps(added[0], ensure_ascii=False)[:400])
         return 0
     if not added and filled == 0:
+        log("SYNC_STATUS=ok candidates=%d added=0 filled=0" % len(ids))
         return 0
 
     data["items"] = added + items
@@ -340,6 +357,7 @@ def main():
     json.dump(data, open(DATA, "w", encoding="utf-8"),
               ensure_ascii=False, separators=(",", ":"))
     log("已写入，总条数:", len(data["items"]))
+    log("SYNC_STATUS=ok candidates=%d added=%d filled=%d" % (len(ids), len(added), filled))
     return 0
 
 
