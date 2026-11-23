@@ -1,7 +1,8 @@
 name: 自动更新 Jasna-LTX 数据
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    # GitHub 的 cron 是"尽力而为"，*/15 实际大约 15–40 分钟一次；要更准得用外部定时器触发 workflow_dispatch
+    - cron: '*/15 * * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -27,6 +28,7 @@ jobs:
           python-version: '3.12'
 
       - name: 抓取 JavDB 最新作品
+        continue-on-error: true
         run: python scripts/sync_javdb.py --max-add 20
 
       - name: 检查是否有变更
@@ -46,5 +48,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A data/
-          git commit -m "chore: 自动更新作品数据 $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push
+          git commit -m "chore: 自动更新作品数据 $(date -u +%Y-%m-%dT%H:%M:%SZ)" || echo "无变更"
+          # 多个 run 撞车时自动 rebase 重试，避免 push 被拒导致整个任务失败
+          for i in 1 2 3 4 5; do
+            if git push; then echo "推送成功"; exit 0; fi
+            echo "push 被拒，rebase 后重试（第 $i 次）"
+            git pull --rebase --autostash origin main || true
+            sleep $((i * 3))
+          done
+          echo "多次重试仍无法推送"; exit 1

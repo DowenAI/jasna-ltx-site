@@ -489,5 +489,62 @@ body.xd-only-sub .card:not([data-xd-sub]){display:none!important}
 })();
 </script>
 <script src="xd_plus.js?v=1" defer></script>
+<script>
+/* LTX 数据即时同步：data/movies.json 一变，这个页面自己刷新 */
+(function () {
+  'use strict';
+  if (!document.querySelector('meta[name="ltx-app"]')) return;
+  var KEY = 'ltx.dataVersion';
+  var stored = null;
+  try { stored = sessionStorage.getItem(KEY); } catch (e) {}
+  var primed = false, checking = false, fired = false;
+  function sig(r) {
+    return [r.headers.get('etag') || '', r.headers.get('last-modified') || '', r.headers.get('content-length') || ''].join('|');
+  }
+  function bar(text, onclick) {
+    var el = document.createElement('div');
+    el.textContent = text;
+    el.style.cssText = 'position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:2147483000;max-width:88vw;padding:10px 16px;border-radius:10px;background:#101418ee;color:#fff;font:14px/1.5 system-ui,sans-serif;box-shadow:0 8px 28px #0007';
+    if (onclick) { el.style.cursor = 'pointer'; el.addEventListener('click', onclick); }
+    document.body.appendChild(el);
+    return el;
+  }
+  function reloadUi() {
+    var busy = document.querySelector('dialog[open]');
+    var tag = (document.activeElement && document.activeElement.tagName) || '';
+    var typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || !!document.querySelector('[contenteditable="true"]:focus');
+    if (busy || typing) { bar('资源库有更新 · 点这里刷新', function () { location.reload(); }); return; }
+    var el = bar('资源库有更新，3 秒后自动刷新…');
+    var left = 3;
+    var timer = setInterval(function () {
+      left -= 1;
+      if (left <= 0) { clearInterval(timer); location.reload(); return; }
+      el.textContent = '资源库有更新，' + left + ' 秒后自动刷新…';
+    }, 1000);
+  }
+  async function check() {
+    if (checking || fired) return;
+    checking = true;
+    try {
+      var r = await fetch('data/movies.json?ping=' + Date.now(), { method: 'HEAD', cache: 'no-store' });
+      if (r && r.ok) {
+        var s = sig(r);
+        if (!primed) {
+          primed = true; stored = s;
+          try { sessionStorage.setItem(KEY, s); } catch (e) {}
+        } else if (s && s !== stored) {
+          fired = true;
+          try { sessionStorage.setItem(KEY, s); } catch (e) {}
+          reloadUi();
+        }
+      }
+    } catch (e) {}
+    checking = false;
+  }
+  setInterval(check, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) check(); });
+  setTimeout(check, 4000);
+})();
+</script>
 </body>
 </html>
