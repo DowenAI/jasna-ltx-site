@@ -1,8 +1,8 @@
 name: 自动更新 Jasna-LTX 数据
 on:
   schedule:
-    # GitHub 的 cron 是"尽力而为"，*/15 实际大约 15–40 分钟一次；要更准得用外部定时器触发 workflow_dispatch
-    - cron: '*/15 * * * *'
+    # 半小时一次：兼顾及时性和对 JavDB 的请求压力（每分钟级方案见 README 里的说明）
+    - cron: '*/30 * * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -26,6 +26,13 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+
+      - name: 随机抖动（0–180 秒）
+        run: |
+          # 让抓取时间不固定，避免形成可识别的规律；也顺带把并发错开
+          n=$((RANDOM % 180))
+          echo "随机等待 ${n}s"
+          sleep "$n"
 
       - name: 抓取 JavDB 最新作品
         continue-on-error: true
